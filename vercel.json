@@ -1,30 +1,51 @@
 {
   "version": 2,
-  "builds": [
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "outputDirectory": ".next",
+  "public": false,
+  "regions": ["gru1"],
+  "functions": {
+    "app/api/**/*.ts": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
+    }
+  },
+  "headers": [
     {
-      "src": "package.json",
-      "use": "@vercel/next"
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/"
+      "source": "/subscription/:path*",
+      "destination": "/subscription/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     }
   ],
   "env": {
     "NEXT_PUBLIC_BASE_URL": "@next_public_base_url",
     "MP_ACCESS_TOKEN": "@mp_access_token",
-    "MP_PUBLIC_KEY": "@mp_public_key"
-  },
-  "build": {
-    "env": {
-      "NEXT_TELEMETRY_DISABLED": "1"
-    }
-  },
-  "functions": {
-    "app/api/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
+    "MP_PUBLIC_KEY": "@mp_public_key",
+    "WEBHOOK_URL": "@webhook_url"
   }
 }
