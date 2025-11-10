@@ -30,7 +30,13 @@ import {
   LineChart,
   Calculator,
   Brain,
-  Award
+  Award,
+  Camera,
+  Lock,
+  Upload,
+  Eye,
+  X,
+  ZoomIn
 } from "lucide-react";
 import { generateMonitoringPDF, generateSampleData } from "@/lib/pdf-generator";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -53,6 +59,17 @@ interface ExamData {
   altura: number;
   imc: number;
   observacoes: string;
+}
+
+// Interface para fotos de progresso
+interface FotoProgresso {
+  id: string;
+  data: string;
+  imagem: string;
+  observacao: string;
+  peso?: number;
+  imc?: number;
+  tipo: 'antes' | 'depois';
 }
 
 // Faixas de referência
@@ -128,6 +145,28 @@ const exemploExames: ExamData[] = [
   }
 ];
 
+// Dados de exemplo para fotos de progresso
+const exemploFotos: FotoProgresso[] = [
+  {
+    id: "1",
+    data: "2024-01-15",
+    imagem: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDIwMCAyNDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEyMCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KPHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSI4OCIgeT0iMTA4Ij4KPHBhdGggZD0iTTIzIDEzSDEzVjIzSDExVjEzSDFWMTFIMTFWMUgxM1YxMUgyM1YxM1oiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo8L3N2Zz4K",
+    observacao: "Início do tratamento - Semana 1",
+    peso: 94.5,
+    imc: 31.2,
+    tipo: 'antes'
+  },
+  {
+    id: "2",
+    data: "2024-07-15",
+    imagem: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDIwMCAyNDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjQwIiBmaWxsPSIjRUNGREY1Ii8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEyMCIgcj0iNDAiIGZpbGw9IiM2NEQ5QTQiLz4KPHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSI4OCIgeT0iMTA4Ij4KPHBhdGggZD0iTTIwIDZMOSAxN0w0IDEyIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4KPC9zdmc+Cg==",
+    observacao: "Após 6 meses - Excelente progresso!",
+    peso: 87.1,
+    imc: 28.9,
+    tipo: 'depois'
+  }
+];
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState("home");
   const [exames, setExames] = useState<ExamData[]>(exemploExames);
@@ -135,6 +174,15 @@ export default function Home() {
     date: new Date().toISOString().split('T')[0],
     altura: 1.70
   });
+  
+  // Estados para fotos de progresso
+  const [fotosProgresso, setFotosProgresso] = useState<FotoProgresso[]>(exemploFotos);
+  const [novaFoto, setNovaFoto] = useState<Partial<FotoProgresso>>({
+    data: new Date().toISOString().split('T')[0],
+    tipo: 'antes'
+  });
+  const [fotoSelecionada, setFotoSelecionada] = useState<FotoProgresso | null>(null);
+  const [mostrarModal, setMostrarModal] = useState(false);
 
   const calcularIMC = (peso: number, altura: number): number => {
     return Number((peso / (altura * altura)).toFixed(1));
@@ -201,6 +249,50 @@ export default function Home() {
   const handleExportPDF = () => {
     const { monitoringData, nutritionData, patientInfo } = generateSampleData();
     generateMonitoringPDF(monitoringData, nutritionData, patientInfo);
+  };
+
+  const handleUploadFoto = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const novaFotoCompleta: FotoProgresso = {
+          id: Date.now().toString(),
+          data: novaFoto.data || new Date().toISOString().split('T')[0],
+          imagem: e.target?.result as string,
+          observacao: novaFoto.observacao || '',
+          peso: novaFoto.peso,
+          imc: novaFoto.peso && novaFoto.peso > 0 ? calcularIMC(novaFoto.peso, 1.70) : undefined,
+          tipo: novaFoto.tipo || 'antes'
+        };
+        
+        setFotosProgresso([...fotosProgresso, novaFotoCompleta]);
+        setNovaFoto({ data: new Date().toISOString().split('T')[0], tipo: 'antes' });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const abrirModal = (foto: FotoProgresso) => {
+    setFotoSelecionada(foto);
+    setMostrarModal(true);
+  };
+
+  const fecharModal = () => {
+    setFotoSelecionada(null);
+    setMostrarModal(false);
+  };
+
+  const calcularDiferencaPeso = () => {
+    const fotoAntes = fotosProgresso.find(f => f.tipo === 'antes');
+    const fotoDepois = fotosProgresso.find(f => f.tipo === 'depois');
+    
+    if (fotoAntes?.peso && fotoDepois?.peso) {
+      const diferenca = fotoAntes.peso - fotoDepois.peso;
+      const semanas = Math.ceil((new Date(fotoDepois.data).getTime() - new Date(fotoAntes.data).getTime()) / (1000 * 60 * 60 * 24 * 7));
+      return { diferenca, semanas, pesoAntes: fotoAntes.peso, pesoDepois: fotoDepois.peso };
+    }
+    return null;
   };
 
   // Preparar dados para gráficos
@@ -556,7 +648,7 @@ export default function Home() {
             </Card>
           </TabsContent>
 
-          {/* Monitoramento Pessoal */}
+          {/* Monitoramento Pessoal - ATUALIZADO COM FOTOS */}
           <TabsContent value="monitoring" className="space-y-6">
             {/* Botão de Exportar PDF */}
             <Card className="bg-blue-50 border-blue-200">
@@ -589,7 +681,6 @@ export default function Home() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Peso (kg)</label>
                     <input type="number" className="w-full p-2 border rounded-md" placeholder="Ex: 75.5" />
@@ -638,6 +729,211 @@ export default function Home() {
               </Card>
             </div>
 
+            {/* NOVA SEÇÃO: Fotos de Progresso */}
+            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-purple-800">
+                  <Camera className="h-6 w-6" />
+                  <span>📸 Fotos de Progresso – Antes e Depois</span>
+                </CardTitle>
+                <CardDescription className="text-purple-700">
+                  Acompanhe sua transformação! Adicione suas fotos de antes e depois para visualizar seu progresso de forma real e inspiradora. 
+                  Toda imagem é confidencial e pertence somente a você.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Aviso de Privacidade */}
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <div className="flex items-start space-x-3">
+                    <Lock className="h-5 w-5 text-green-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-green-800 mb-1">🔒 Privacidade e Segurança</h4>
+                      <p className="text-sm text-green-700">
+                        Suas fotos são armazenadas com segurança e visíveis apenas para você. 
+                        O compartilhamento é opcional e depende da sua autorização.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Formulário para Nova Foto */}
+                <div className="bg-white p-6 rounded-lg border border-gray-200">
+                  <h4 className="font-semibold mb-4 flex items-center">
+                    <Plus className="h-4 w-4 mr-2 text-blue-600" />
+                    Adicionar Nova Foto
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="text-sm font-medium">Data da Foto</label>
+                      <input 
+                        type="date" 
+                        className="w-full p-2 border rounded-md"
+                        value={novaFoto.data}
+                        onChange={(e) => setNovaFoto({...novaFoto, data: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Tipo</label>
+                      <select 
+                        className="w-full p-2 border rounded-md"
+                        value={novaFoto.tipo}
+                        onChange={(e) => setNovaFoto({...novaFoto, tipo: e.target.value as 'antes' | 'depois'})}
+                      >
+                        <option value="antes">Antes</option>
+                        <option value="depois">Depois</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="text-sm font-medium">Peso (kg) - Opcional</label>
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        className="w-full p-2 border rounded-md" 
+                        placeholder="Ex: 85.5"
+                        value={novaFoto.peso || ''}
+                        onChange={(e) => setNovaFoto({...novaFoto, peso: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Observação</label>
+                      <input 
+                        type="text" 
+                        className="w-full p-2 border rounded-md" 
+                        placeholder="Ex: 2ª semana de uso da Tirzepatida"
+                        value={novaFoto.observacao || ''}
+                        onChange={(e) => setNovaFoto({...novaFoto, observacao: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="text-sm font-medium mb-2 block">Selecionar Foto</label>
+                    <div className="flex items-center space-x-4">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleUploadFoto}
+                        className="hidden" 
+                        id="upload-foto"
+                      />
+                      <label 
+                        htmlFor="upload-foto" 
+                        className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-700 transition-colors"
+                      >
+                        <Upload className="h-4 w-4" />
+                        <span>Adicionar Foto</span>
+                      </label>
+                      <p className="text-xs text-gray-500">Galeria ou câmera</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Galeria de Fotos */}
+                {fotosProgresso.length > 0 && (
+                  <div className="bg-white p-6 rounded-lg border border-gray-200">
+                    <h4 className="font-semibold mb-4 flex items-center">
+                      <Eye className="h-4 w-4 mr-2 text-purple-600" />
+                      Sua Galeria de Progresso
+                    </h4>
+
+                    {/* Comparação Antes e Depois */}
+                    {calcularDiferencaPeso() && (
+                      <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg mb-6 border border-green-200">
+                        <h5 className="font-medium text-green-800 mb-2">📈 Resumo da Transformação</h5>
+                        {(() => {
+                          const diff = calcularDiferencaPeso()!;
+                          return (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-gray-600">Peso Inicial</p>
+                                <p className="font-bold text-lg">{diff.pesoAntes} kg</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600">Peso Atual</p>
+                                <p className="font-bold text-lg">{diff.pesoDepois} kg</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600">Diferença</p>
+                                <p className="font-bold text-lg text-green-600">-{diff.diferenca.toFixed(1)} kg</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600">Período</p>
+                                <p className="font-bold text-lg">{diff.semanas} semanas</p>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+
+                    {/* Grid de Fotos */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {fotosProgresso.map((foto) => (
+                        <div key={foto.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <div className="relative mb-3">
+                            <img 
+                              src={foto.imagem} 
+                              alt={`Foto ${foto.tipo}`}
+                              className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => abrirModal(foto)}
+                            />
+                            <div className="absolute top-2 right-2">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                foto.tipo === 'antes' 
+                                  ? 'bg-blue-100 text-blue-800' 
+                                  : 'bg-green-100 text-green-800'
+                              }`}>
+                                {foto.tipo === 'antes' ? 'Antes' : 'Depois'}
+                              </span>
+                            </div>
+                            <button 
+                              onClick={() => abrirModal(foto)}
+                              className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 transition-all"
+                            >
+                              <ZoomIn className="h-4 w-4" />
+                            </button>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium">
+                              📅 {new Date(foto.data).toLocaleDateString('pt-BR')}
+                            </p>
+                            {foto.observacao && (
+                              <p className="text-xs text-gray-600">{foto.observacao}</p>
+                            )}
+                            {foto.peso && (
+                              <div className="flex items-center space-x-4 text-xs">
+                                <span>Peso: {foto.peso} kg</span>
+                                {foto.imc && <span>IMC: {foto.imc}</span>}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Botão de Exportar com Fotos */}
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-blue-800">Exportar com Relatório Médico</h4>
+                      <p className="text-sm text-blue-700">Inclua fotos comparativas e dados de progresso no PDF</p>
+                    </div>
+                    <Button className="bg-blue-600 hover:bg-blue-700">
+                      <Download className="h-4 w-4 mr-2" />
+                      Exportar com Fotos
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Lembretes e Metas</CardTitle>
@@ -663,6 +959,41 @@ export default function Home() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Modal para Visualização de Foto em Tela Cheia */}
+          {mostrarModal && fotoSelecionada && (
+            <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg max-w-4xl max-h-full overflow-auto">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <h3 className="text-lg font-semibold">
+                    Foto {fotoSelecionada.tipo} - {new Date(fotoSelecionada.data).toLocaleDateString('pt-BR')}
+                  </h3>
+                  <button 
+                    onClick={fecharModal}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="p-4">
+                  <img 
+                    src={fotoSelecionada.imagem} 
+                    alt={`Foto ${fotoSelecionada.tipo}`}
+                    className="w-full max-h-96 object-contain rounded-lg"
+                  />
+                  {fotoSelecionada.observacao && (
+                    <p className="mt-4 text-gray-700">{fotoSelecionada.observacao}</p>
+                  )}
+                  {fotoSelecionada.peso && (
+                    <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
+                      <span>Peso: {fotoSelecionada.peso} kg</span>
+                      {fotoSelecionada.imc && <span>IMC: {fotoSelecionada.imc}</span>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Comparador de Exames Laboratoriais */}
           <TabsContent value="exams" className="space-y-6">
@@ -778,7 +1109,7 @@ export default function Home() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Altura (m)</label>
+                    <label className="text-sm font-medium">Altura (m)  </label>
                     <input 
                       type="number" 
                       step="0.01" 
@@ -1164,8 +1495,6 @@ export default function Home() {
                       promoção do bem-estar espiritual e emocional.
                     </p>
                   </div>
-
-                  
 
                   <div className="bg-white p-6 rounded-lg border border-blue-100">
                     <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
