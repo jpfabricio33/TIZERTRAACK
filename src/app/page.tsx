@@ -20,11 +20,22 @@ import {
   TrendingUp,
   Calendar,
   Droplets,
-  Apple
+  Apple,
+  Download,
+  FileText
 } from "lucide-react";
+import { generateMonitoringPDF, generateSampleData } from "@/lib/pdf-generator";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("home");
+
+  const handleExportPDF = () => {
+    // Para demonstração, vamos usar dados de exemplo
+    // Em uma aplicação real, estes dados viriam do estado da aplicação ou banco de dados
+    const { monitoringData, nutritionData, patientInfo } = generateSampleData();
+    
+    generateMonitoringPDF(monitoringData, nutritionData, patientInfo);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -371,6 +382,28 @@ export default function Home() {
 
           {/* Monitoramento Pessoal */}
           <TabsContent value="monitoring" className="space-y-6">
+            {/* Botão de Exportar PDF */}
+            <Card className="bg-blue-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-blue-800">
+                  <FileText className="h-5 w-5" />
+                  <span>Relatório para o Médico</span>
+                </CardTitle>
+                <CardDescription className="text-blue-700">
+                  Exporte seus dados de monitoramento em PDF para levar na consulta médica
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={handleExportPDF} className="bg-blue-600 hover:bg-blue-700">
+                  <Download className="h-4 w-4 mr-2" />
+                  Baixar Relatório PDF
+                </Button>
+                <p className="text-xs text-blue-600 mt-2">
+                  O relatório inclui registros de peso, glicemia, sintomas e dados nutricionais
+                </p>
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
