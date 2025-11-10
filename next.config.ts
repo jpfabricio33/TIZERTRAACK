@@ -3,55 +3,28 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Otimizações para Vercel
   output: "standalone",
-
-  // Configurações de imagem otimizadas
+  
+  // Configurações de imagem otimizadas para Vercel
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "*.supabase.co",
-        port: "",
-        pathname: "/storage/v1/object/**",
+        hostname: "*.vercel.app",
       },
       {
-        protocol: "https",
+        protocol: "https", 
         hostname: "images.unsplash.com",
       },
     ],
+    unoptimized: false, // Habilitar otimização de imagens na Vercel
   },
 
   // Configurações experimentais estáveis
   experimental: {
-    typedRoutes: false, // Desabilitado para evitar conflitos
-    serverComponentsExternalPackages: ["@supabase/supabase-js"],
+    serverComponentsExternalPackages: ["@mercadopago/sdk-react"],
   },
 
-  // Configurações de webpack para resolver problemas comuns
-  webpack: (config, { isServer }) => {
-    // Resolver problemas com módulos Node.js
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-        crypto: false,
-      };
-    }
-
-    // Otimizações de bundle
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        ...config.optimization.splitChunks,
-        chunks: "all",
-      },
-    };
-
-    return config;
-  },
-
-  // Headers de segurança
+  // Headers de segurança para APIs
   async headers() {
     return [
       {
@@ -73,35 +46,40 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // ESLint configuração para não quebrar build
+  // Redirects para URLs antigas (se necessário)
+  async redirects() {
+    return [
+      {
+        source: "/home",
+        destination: "/",
+        permanent: true,
+      },
+    ];
+  },
+
+  // ESLint e TypeScript configurações para produção
   eslint: {
-    ignoreDuringBuilds: false, // Manter linting ativo para qualidade
+    ignoreDuringBuilds: false, // Manter verificação de qualidade
   },
 
-  // TypeScript configuração
   typescript: {
-    ignoreBuildErrors: false, // Não ignorar erros TS
+    ignoreBuildErrors: false, // Não ignorar erros TypeScript
   },
 
-  // Configurações de compilação
+  // Configurações de compilação otimizadas
   swcMinify: true,
-
-  // Configurações de ambiente otimizadas para Lasy
+  
+  // Configurações de ambiente
   env: {
-    // Variáveis customizadas
     CUSTOM_KEY: process.env.CUSTOM_KEY,
-
-    // Fallbacks para variáveis comuns
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || "",
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
   },
 
-  // Configurações específicas para preview da Lasy
-  ...(process.env.NODE_ENV === "development" && {
-    // Configurações otimizadas para desenvolvimento
-    reactStrictMode: false, // Para compatibilidade com preview
-    swcMinify: false, // Desabilitar minify em dev para melhor debugging
+  // Configurações específicas para produção na Vercel
+  ...(process.env.NODE_ENV === "production" && {
+    // Otimizações de produção
+    compress: true,
+    poweredByHeader: false,
   }),
 };
 

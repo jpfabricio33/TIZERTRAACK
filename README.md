@@ -1,97 +1,148 @@
-# Next.js Template - Lasy AI
+# TirzeTrack - Monitoramento Científico da Tirzepatida
 
-Este é um template [Next.js](https://nextjs.org) otimizado para deploys sem problemas, bootstrapped com [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Aplicativo completo para monitoramento e acompanhamento do uso da tirzepatida, com sistema de assinatura premium.
 
-## 🚀 Melhorias para Deploy na Vercel
+## 🚀 Deploy na Vercel
 
-Este template inclui otimizações específicas para evitar erros comuns de deploy:
+### Pré-requisitos
+- Conta no GitHub
+- Conta na Vercel
+- Conta no Mercado Pago (para pagamentos)
 
-### ✅ **Compatibilidade de Dependências**
+### Passo a Passo para Deploy
 
-- **Next.js 15.1.8** + **React 19** + todas as dependências atualizadas
-- **react-day-picker v9** compatível com React 19
-- **Configuração `.npmrc`** para resolver conflitos automaticamente
-
-### ✅ **Configurações de Build Otimizadas**
-
-- **TypeScript configurado** para excluir Supabase functions
-- **Webpack configurado** para ignorar conflitos Deno/Node.js
-- **`.vercelignore`** para otimizar o processo de build
-
-### ✅ **Componentes Atualizados**
-
-- **Calendar component** compatível com react-day-picker v9
-- **UI components** do Shadcn/UI nas versões mais recentes
-
----
-
-## 🛠️ Começando
-
-Execute o servidor de desenvolvimento:
-
+#### 1. Preparar o Repositório GitHub
 ```bash
+# Clone ou faça fork do repositório
+git clone https://github.com/seu-usuario/tirzetrack.git
+cd tirzetrack
+
+# Instale as dependências
+npm install
+
+# Teste localmente
 npm run dev
-# ou
-yarn dev
-# ou
-pnpm dev
-# ou
-bun dev
 ```
 
-Abra [http://localhost:3000](http://localhost:3000) no seu navegador para ver o resultado.
+#### 2. Conectar GitHub com Vercel
 
-Você pode começar editando a página modificando `app/page.tsx`. A página atualiza automaticamente conforme você edita o arquivo.
+1. **Acesse [vercel.com](https://vercel.com)**
+2. **Faça login com sua conta GitHub**
+3. **Clique em "New Project"**
+4. **Selecione o repositório TirzeTrack**
+5. **Configure as variáveis de ambiente:**
 
----
+```env
+NEXT_PUBLIC_BASE_URL=https://seu-app.vercel.app
+MP_ACCESS_TOKEN=seu_mercadopago_access_token
+MP_PUBLIC_KEY=sua_mercadopago_public_key
+WEBHOOK_URL=https://seu-app.vercel.app/api/mercadopago/webhook
+```
 
-## 📚 Stack Tecnológica
+#### 3. Configurar Mercado Pago
 
-- **Framework**: Next.js 15.1.8 com App Router
-- **React**: 19.0.0 com suporte total
-- **Styling**: Tailwind CSS + Shadcn/UI
-- **Icons**: Lucide React
-- **Forms**: React Hook Form + Zod
-- **UI Components**: Radix UI primitives
+1. **Acesse [developers.mercadopago.com](https://developers.mercadopago.com)**
+2. **Crie uma aplicação**
+3. **Copie as credenciais:**
+   - Access Token
+   - Public Key
+4. **Configure o Webhook URL** após o deploy
 
----
+#### 4. Deploy Automático
 
-## 🔧 Deploy na Vercel
+A Vercel fará o deploy automaticamente quando você:
+- Fizer push para a branch main
+- Merge de pull requests
+- Configurar as variáveis de ambiente
 
-### **Variáveis de Ambiente**
+### Configurações de Produção
 
-Se você estiver usando Supabase, configure estas variáveis na Vercel:
+#### Variáveis de Ambiente Obrigatórias:
+```env
+NEXT_PUBLIC_BASE_URL=https://tirzetrack.vercel.app
+MP_ACCESS_TOKEN=APP_USR-xxxxxxxx
+MP_PUBLIC_KEY=APP_USR-xxxxxxxx
+WEBHOOK_URL=https://tirzetrack.vercel.app/api/mercadopago/webhook
+```
 
+#### Configurações do Mercado Pago:
+1. **Webhook URL**: Configure no painel do Mercado Pago
+2. **URLs de Retorno**:
+   - Sucesso: `https://seu-app.vercel.app/subscription/success`
+   - Falha: `https://seu-app.vercel.app/subscription/failure`
+   - Pendente: `https://seu-app.vercel.app/subscription/pending`
+
+## 🔧 Solução de Problemas
+
+### Erro: "Conecte as contas corretamente"
+
+1. **Verifique a conexão GitHub-Vercel:**
+   - Vá em Settings > Git Integration
+   - Reconecte sua conta GitHub
+   - Verifique permissões do repositório
+
+2. **Verifique as variáveis de ambiente:**
+   - Todas as variáveis estão configuradas?
+   - Os valores estão corretos?
+   - Não há espaços extras?
+
+3. **Verifique o arquivo vercel.json:**
+   - Está na raiz do projeto?
+   - Sintaxe JSON está correta?
+
+### Erro de Build
+
+1. **Verifique dependências:**
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=sua_url_do_supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima
+npm install
+npm run build
 ```
 
-### **Deploy Automático**
+2. **Verifique TypeScript:**
+```bash
+npm run type-check
+```
 
-1. Conecte seu repositório GitHub à Vercel
-2. A Vercel detectará automaticamente Next.js
-3. O build será executado sem erros graças às otimizações
+3. **Limpe cache:**
+```bash
+rm -rf .next
+npm run build
+```
+
+### Erro de Webhook
+
+1. **Verifique URL do webhook no Mercado Pago**
+2. **Teste a rota da API:**
+```bash
+curl -X POST https://seu-app.vercel.app/api/mercadopago/webhook
+```
+
+## 📱 Funcionalidades
+
+- ✅ Sistema de assinatura mensal (R$ 19,90)
+- ✅ Monitoramento pessoal completo
+- ✅ Comparador de exames laboratoriais
+- ✅ Fotos de progresso antes/depois
+- ✅ Relatórios em PDF para médicos
+- ✅ Análise inteligente de resultados
+- ✅ Guias de uso seguro
+
+## 🛠️ Tecnologias
+
+- **Framework**: Next.js 15
+- **UI**: Shadcn/UI + Tailwind CSS
+- **Pagamentos**: Mercado Pago
+- **Deploy**: Vercel
+- **Linguagem**: TypeScript
+
+## 📞 Suporte
+
+Para problemas de deploy ou configuração:
+1. Verifique os logs da Vercel
+2. Consulte a documentação oficial
+3. Entre em contato com o suporte
 
 ---
 
-## 📖 Saiba Mais
-
-Para aprender mais sobre Next.js, confira estes recursos:
-
-- [Documentação Next.js](https://nextjs.org/docs) - aprenda sobre recursos e API do Next.js
-- [Learn Next.js](https://nextjs.org/learn) - tutorial interativo do Next.js
-
-Você pode conferir [o repositório GitHub do Next.js](https://github.com/vercel/next.js) - seu feedback e contribuições são bem-vindos!
-
----
-
-## 🎯 Deploy Otimizado
-
-A maneira mais fácil de deployar seu app Next.js é usar a [Plataforma Vercel](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) dos criadores do Next.js.
-
-Confira nossa [documentação de deployment do Next.js](https://nextjs.org/docs/app/building-your-application/deploying) para mais detalhes.
-
----
-
-_Template otimizado para uso com Lasy AI - builds consistentes e deploys sem problemas!_
+**Desenvolvido por Ronaldo da Tirzepatida**
+*Educação em saúde e bem-estar*
