@@ -1,24 +1,37 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configuração para funcionar no ambiente Vercel
+  // Configuração essencial para Vercel
   output: 'standalone',
   
-  // Configurações de imagem
+  // Configurações de imagem otimizadas
   images: {
-    domains: ['localhost'],
-    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.vercel.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
+    unoptimized: false,
   },
 
-  // Configurações para melhor compatibilidade de deploy
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
-  
+  // Configurações de build otimizadas
+  swcMinify: true,
+  compress: true,
+  poweredByHeader: false,
+
+  // Configurações de TypeScript e ESLint
   typescript: {
     ignoreBuildErrors: false,
   },
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
 
-  // Headers de segurança
+  // Headers de segurança para APIs
   async headers() {
     return [
       {
@@ -33,9 +46,33 @@ const nextConfig = {
     ];
   },
 
+  // Redirects úteis
+  async redirects() {
+    return [
+      {
+        source: '/home',
+        destination: '/',
+        permanent: true,
+      },
+    ];
+  },
+
   // Configurações experimentais estáveis
   experimental: {
     serverComponentsExternalPackages: ['@mercadopago/sdk-react'],
+  },
+
+  // Configurações de webpack para otimização
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
   },
 };
 

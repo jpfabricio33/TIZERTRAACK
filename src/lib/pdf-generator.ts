@@ -1,231 +1,160 @@
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
 
-interface MonitoringData {
+// Extend jsPDF type to include autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
+
+export interface MonitoringData {
+  date: string;
   weight: number;
   glucose: number;
   symptoms: string;
-  date: string;
+  notes: string;
 }
 
-interface NutritionData {
+export interface NutritionData {
+  date: string;
   water: number;
   protein: number;
   fiber: number;
   carbs: number;
-  date: string;
 }
 
-interface PatientInfo {
-  name?: string;
-  age?: number;
-  startDate?: string;
+export interface PatientInfo {
+  name: string;
+  age: number;
+  startDate: string;
+  currentDose: string;
 }
 
-export const generateMonitoringPDF = (
+export function generateMonitoringPDF(
   monitoringData: MonitoringData[],
   nutritionData: NutritionData[],
-  patientInfo?: PatientInfo
-) => {
+  patientInfo: PatientInfo
+) {
   const doc = new jsPDF();
   
-  // Configurações
-  const pageWidth = doc.internal.pageSize.width;
-  const margin = 20;
-  let yPosition = margin;
-
-  // Cabeçalho
+  // Header
   doc.setFontSize(20);
-  doc.setTextColor(37, 99, 235); // Blue-600
-  doc.text('TirzeTrack - Relatório de Monitoramento', margin, yPosition);
+  doc.text('TirzeTrack - Relatório de Monitoramento', 20, 20);
   
-  yPosition += 15;
   doc.setFontSize(12);
-  doc.setTextColor(75, 85, 99); // Gray-600
-  doc.text('Relatório gerado para acompanhamento médico', margin, yPosition);
-  
-  yPosition += 20;
+  doc.text(`Paciente: ${patientInfo.name}`, 20, 35);
+  doc.text(`Idade: ${patientInfo.age} anos`, 20, 45);
+  doc.text(`Início do tratamento: ${patientInfo.startDate}`, 20, 55);
+  doc.text(`Dose atual: ${patientInfo.currentDose}`, 20, 65);
+  doc.text(`Relatório gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 75);
 
-  // Informações do paciente (se fornecidas)
-  if (patientInfo?.name) {
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Informações do Paciente:', margin, yPosition);
-    yPosition += 10;
-    
-    doc.setFontSize(11);
-    doc.text(`Nome: ${patientInfo.name}`, margin + 5, yPosition);
-    yPosition += 7;
-    
-    if (patientInfo.age) {
-      doc.text(`Idade: ${patientInfo.age} anos`, margin + 5, yPosition);
-      yPosition += 7;
-    }
-    
-    if (patientInfo.startDate) {
-      doc.text(`Início do tratamento: ${patientInfo.startDate}`, margin + 5, yPosition);
-      yPosition += 7;
-    }
-    
-    yPosition += 10;
-  }
-
-  // Data de geração
-  doc.setFontSize(10);
-  doc.setTextColor(107, 114, 128); // Gray-500
-  doc.text(`Relatório gerado em: ${new Date().toLocaleDateString('pt-BR')}`, margin, yPosition);
-  yPosition += 20;
-
-  // Tabela de Monitoramento (Peso e Glicemia)
+  // Monitoring data table
   if (monitoringData.length > 0) {
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Registros de Peso e Glicemia:', margin, yPosition);
-    yPosition += 10;
-
-    const monitoringTableData = monitoringData.map(record => [
-      record.date,
-      `${record.weight} kg`,
-      `${record.glucose} mg/dL`,
-      record.symptoms || 'Nenhum sintoma relatado'
-    ]);
-
-    autoTable(doc, {
-      startY: yPosition,
-      head: [['Data', 'Peso', 'Glicemia', 'Sintomas']],
-      body: monitoringTableData,
+    doc.autoTable({
+      startY: 90,
+      head: [['Data', 'Peso (kg)', 'Glicemia (mg/dL)', 'Sintomas']],
+      body: monitoringData.map(item => [
+        item.date,
+        item.weight.toString(),
+        item.glucose.toString(),
+        item.symptoms
+      ]),
       theme: 'grid',
-      headStyles: { fillColor: [37, 99, 235] },
-      styles: { fontSize: 9 },
-      margin: { left: margin, right: margin }
+      headStyles: { fillColor: [59, 130, 246] },
     });
-
-    yPosition = (doc as any).lastAutoTable.finalY + 20;
   }
 
-  // Verificar se precisa de nova página
-  if (yPosition > 200) {
-    doc.addPage();
-    yPosition = margin;
-  }
-
-  // Tabela de Dados Nutricionais
+  // Nutrition data table
   if (nutritionData.length > 0) {
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Registros Nutricionais:', margin, yPosition);
-    yPosition += 10;
-
-    const nutritionTableData = nutritionData.map(record => [
-      record.date,
-      `${record.water}L`,
-      `${record.protein}g`,
-      `${record.fiber}g`,
-      `${record.carbs}g`
-    ]);
-
-    autoTable(doc, {
-      startY: yPosition,
-      head: [['Data', 'Água', 'Proteínas', 'Fibras', 'Carboidratos']],
-      body: nutritionTableData,
+    const finalY = (doc as any).lastAutoTable?.finalY || 150;
+    
+    doc.autoTable({
+      startY: finalY + 20,
+      head: [['Data', 'Água (L)', 'Proteína (g)', 'Fibra (g)', 'Carboidratos (g)']],
+      body: nutritionData.map(item => [
+        item.date,
+        item.water.toString(),
+        item.protein.toString(),
+        item.fiber.toString(),
+        item.carbs.toString()
+      ]),
       theme: 'grid',
       headStyles: { fillColor: [34, 197, 94] },
-      styles: { fontSize: 9 },
-      margin: { left: margin, right: margin }
     });
-
-    yPosition = (doc as any).lastAutoTable.finalY + 20;
   }
 
-  // Aviso legal no final
-  if (yPosition > 250) {
-    doc.addPage();
-    yPosition = margin;
+  // Footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(10);
+    doc.text(
+      `Página ${i} de ${pageCount} - TirzeTrack © ${new Date().getFullYear()}`,
+      20,
+      doc.internal.pageSize.height - 10
+    );
   }
 
-  yPosition += 10;
-  doc.setFontSize(10);
-  doc.setTextColor(185, 28, 28); // Red-700
-  doc.text('AVISO LEGAL:', margin, yPosition);
-  yPosition += 7;
-  
-  doc.setFontSize(9);
-  doc.setTextColor(107, 114, 128);
-  const legalText = [
-    'Este relatório contém informações de automonitoramento e tem fins educativos.',
-    'As informações não substituem a consulta médica profissional.',
-    'O uso de tirzepatida deve ser sempre orientado por um profissional de saúde.',
-    'Leve este relatório para sua próxima consulta médica.'
-  ];
+  // Save the PDF
+  doc.save(`tirzetrack-relatorio-${new Date().toISOString().split('T')[0]}.pdf`);
+}
 
-  legalText.forEach(line => {
-    doc.text(line, margin, yPosition);
-    yPosition += 5;
-  });
-
-  // Salvar o PDF
-  const fileName = `TirzeTrack_Relatorio_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
-  doc.save(fileName);
-};
-
-// Função para gerar dados de exemplo (para demonstração)
-export const generateSampleData = () => {
+export function generateSampleData() {
   const monitoringData: MonitoringData[] = [
     {
-      date: '15/11/2024',
-      weight: 85.2,
-      glucose: 125,
-      symptoms: 'Leve náusea após aplicação'
-    },
-    {
-      date: '08/11/2024',
-      weight: 86.1,
-      glucose: 130,
-      symptoms: 'Nenhum sintoma'
-    },
-    {
-      date: '01/11/2024',
-      weight: 87.5,
-      glucose: 140,
-      symptoms: 'Diminuição do apetite'
-    },
-    {
-      date: '25/10/2024',
-      weight: 88.8,
+      date: '2024-01-15',
+      weight: 88.5,
       glucose: 145,
-      symptoms: 'Primeira aplicação - sem efeitos'
+      symptoms: 'Náusea leve',
+      notes: 'Primeira semana'
+    },
+    {
+      date: '2024-02-15',
+      weight: 86.2,
+      glucose: 125,
+      symptoms: 'Sem sintomas',
+      notes: 'Adaptação boa'
+    },
+    {
+      date: '2024-03-15',
+      weight: 84.1,
+      glucose: 110,
+      symptoms: 'Sem sintomas',
+      notes: 'Excelente progresso'
     }
   ];
 
   const nutritionData: NutritionData[] = [
     {
-      date: '15/11/2024',
-      water: 2.2,
-      protein: 85,
-      fiber: 28,
-      carbs: 120
-    },
-    {
-      date: '14/11/2024',
-      water: 1.8,
-      protein: 75,
-      fiber: 22,
+      date: '2024-01-15',
+      water: 2.0,
+      protein: 80,
+      fiber: 25,
       carbs: 150
     },
     {
-      date: '13/11/2024',
+      date: '2024-02-15',
       water: 2.5,
-      protein: 90,
+      protein: 85,
       fiber: 30,
-      carbs: 110
+      carbs: 140
+    },
+    {
+      date: '2024-03-15',
+      water: 3.0,
+      protein: 90,
+      fiber: 35,
+      carbs: 130
     }
   ];
 
   const patientInfo: PatientInfo = {
     name: 'Paciente Exemplo',
     age: 45,
-    startDate: '25/10/2024'
+    startDate: '15/01/2024',
+    currentDose: '7.5mg semanal'
   };
 
   return { monitoringData, nutritionData, patientInfo };
-};
+}
