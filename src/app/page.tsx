@@ -29,7 +29,8 @@ import {
   Plus,
   LineChart,
   Calculator,
-  Brain
+  Brain,
+  Award
 } from "lucide-react";
 import { generateMonitoringPDF, generateSampleData } from "@/lib/pdf-generator";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -588,6 +589,7 @@ export default function Home() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Peso (kg)</label>
                     <input type="number" className="w-full p-2 border rounded-md" placeholder="Ex: 75.5" />
@@ -1127,53 +1129,86 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            {/* Sobre o Aplicativo - Biografia Completa */}
-            <Card>
+            {/* Sobre Ronaldo da Tirzepatida - Seção Destacada */}
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <User className="h-5 w-5 text-gray-600" />
-                  <span>Sobre o Criador</span>
+                <CardTitle className="flex items-center space-x-2 text-blue-800">
+                  <Award className="h-6 w-6" />
+                  <span>Sobre Ronaldo da Tirzepatida</span>
                 </CardTitle>
+                <CardDescription className="text-blue-700">
+                  Conheça o criador do TirzeTrack e sua missão de promover informação científica e bem-estar
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div>
+                  <div className="bg-white p-6 rounded-lg border border-blue-100">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">Biográfico</h3>
-                    <h4 className="text-lg font-semibold text-blue-800 mb-3">Ronaldo Caitano Pires Bispo</h4>
+                    <h4 className="text-lg font-semibold text-blue-800 mb-4">Ronaldo Caitano Pires Bispo</h4>
                     
-                    <p className="text-sm text-gray-700 mb-4">
+                    <p className="text-sm text-gray-700 mb-4 leading-relaxed">
                       Presidente da CNRCEUS, Pastor, Filósofo, Psicanalista, Aspirante em Psicologia 5° período, 
                       Capelão Militar e Hospitalar, e Juiz de Paz, com ampla atuação nas áreas espiritual, 
                       educacional e humanística.
                     </p>
                   </div>
 
-                  <div>
-                    <h5 className="font-semibold text-gray-800 mb-2">Trajetória e Missão</h5>
-                    <p className="text-sm text-gray-700 mb-4">
+                  <div className="bg-white p-6 rounded-lg border border-blue-100">
+                    <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
+                      <Heart className="h-4 w-4 text-red-500 mr-2" />
+                      Trajetória e Missão
+                    </h5>
+                    <p className="text-sm text-gray-700 mb-4 leading-relaxed">
                       Com uma trajetória marcada pela integração entre fé, ciência e serviço social, o Bispo Ronaldo 
                       dedica-se à formação de líderes, à restauração de famílias, ao aconselhamento psicológico e à 
                       promoção do bem-estar espiritual e emocional.
                     </p>
                   </div>
 
-                  <div>
-                    <h5 className="font-semibold text-gray-800 mb-3">Formação Acadêmica</h5>
-                    <p className="text-sm text-gray-700 mb-2">
+                  
+
+                  <div className="bg-white p-6 rounded-lg border border-blue-100">
+                    <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
+                      <BookOpen className="h-4 w-4 text-green-500 mr-2" />
+                      Formação Acadêmica
+                    </h5>
+                    <p className="text-sm text-gray-700 mb-3">
                       Sua formação acadêmica inclui estudos em renomadas instituições brasileiras:
                     </p>
-                    <ul className="text-sm text-gray-700 space-y-1 ml-4">
-                      <li>• Faculdades Unilasalle – Niterói (RJ)</li>
-                      <li>• FACES – Itaboraí (RJ)</li>
-                      <li>• UNIFATEC – Santa Catarina</li>
-                      <li>• UNICAJE – São Luís (MA)</li>
-                      <li>• FACEO – São Paulo (SP)</li>
-                    </ul>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        <li className="flex items-center">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                          Faculdades Unilasalle – Niterói (RJ)
+                        </li>
+                        <li className="flex items-center">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                          FACES – Itaboraí (RJ)
+                        </li>
+                        <li className="flex items-center">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                          UNIFATEC – Santa Catarina
+                        </li>
+                      </ul>
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        <li className="flex items-center">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                          UNICAJE – São Luís (MA)
+                        </li>
+                        <li className="flex items-center">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                          FACEO – São Paulo (SP)
+                        </li>
+                      </ul>
+                    </div>
                   </div>
 
-                  <div>
-                    <h5 className="font-sem ibold text-gray-800 mb-2">Filosofia e Abordagem</h5>
-                    <p className="text-sm text-gray-700 mb-4">
+                  <div className="bg-white p-6 rounded-lg border border-blue-100">
+                    <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
+                      <Brain className="h-4 w-4 text-purple-500 mr-2" />
+                      Filosofia e Abordagem
+                    </h5>
+                    <p className="text-sm text-gray-700 mb-4 leading-relaxed">
                       Ao longo de sua carreira, tem se destacado pela capacidade de unir sabedoria teológica, 
                       conhecimento psicológico e visão filosófica em sua prática pastoral e educacional. Seu trabalho 
                       reflete uma abordagem integral do ser humano — corpo, mente e espírito — voltada para a 
@@ -1181,12 +1216,18 @@ export default function Home() {
                     </p>
                   </div>
 
-                  <div className="border-t pt-4">
-                    <p className="text-xs text-gray-600 italic">
-                      <strong>Declaração de Independência:</strong> Este aplicativo tem fins educativos e não possui 
-                      vínculo comercial com fabricantes de medicamentos. As informações não substituem orientação 
-                      médica profissional.
-                    </p>
+                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <div className="flex items-start space-x-2">
+                      <Info className="h-4 w-4 text-yellow-600 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-yellow-800 font-medium mb-1">Declaração de Independência</p>
+                        <p className="text-xs text-yellow-700 leading-relaxed">
+                          Este aplicativo tem fins educativos e não possui vínculo comercial com fabricantes de medicamentos. 
+                          As informações não substituem orientação médica profissional. O TirzeTrack foi desenvolvido com o 
+                          objetivo de promover educação em saúde e bem-estar.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
