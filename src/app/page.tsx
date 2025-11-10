@@ -592,6 +592,7 @@ export default function Home() {
                     <label className="text-sm font-medium">Peso (kg)</label>
                     <input type="number" className="w-full p-2 border rounded-md" placeholder="Ex: 75.5" />
                   </div>
+                  
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Glicemia (mg/dL)</label>
                     <input type="number" className="w-full p-2 border rounded-md" placeholder="Ex: 120" />
@@ -1126,7 +1127,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            {/* Sobre o Aplicativo */}
+            {/* Sobre o Aplicativo - Biografia Completa */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -1135,16 +1136,33 @@ export default function Home() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Ronaldo Caitano Pires Bispo</h3>
-                  <p className="text-sm text-gray-600">
-                    Presidente da CNRCEUS, Pastor, Filósofo, Psicanalista, Aspirante em Psicologia 5° período, 
-                    Capelão Militar e Hospitalar, e Juiz de Paz, com ampla atuação nas áreas espiritual, 
-                    educacional e humanística.
-                  </p>
+                <div className="space-y-6">
                   <div>
-                    <h4 className="font-medium mb-2">Formação Acadêmica</h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Biográfico</h3>
+                    <h4 className="text-lg font-semibold text-blue-800 mb-3">Ronaldo Caitano Pires Bispo</h4>
+                    
+                    <p className="text-sm text-gray-700 mb-4">
+                      Presidente da CNRCEUS, Pastor, Filósofo, Psicanalista, Aspirante em Psicologia 5° período, 
+                      Capelão Militar e Hospitalar, e Juiz de Paz, com ampla atuação nas áreas espiritual, 
+                      educacional e humanística.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h5 className="font-semibold text-gray-800 mb-2">Trajetória e Missão</h5>
+                    <p className="text-sm text-gray-700 mb-4">
+                      Com uma trajetória marcada pela integração entre fé, ciência e serviço social, o Bispo Ronaldo 
+                      dedica-se à formação de líderes, à restauração de famílias, ao aconselhamento psicológico e à 
+                      promoção do bem-estar espiritual e emocional.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h5 className="font-semibold text-gray-800 mb-3">Formação Acadêmica</h5>
+                    <p className="text-sm text-gray-700 mb-2">
+                      Sua formação acadêmica inclui estudos em renomadas instituições brasileiras:
+                    </p>
+                    <ul className="text-sm text-gray-700 space-y-1 ml-4">
                       <li>• Faculdades Unilasalle – Niterói (RJ)</li>
                       <li>• FACES – Itaboraí (RJ)</li>
                       <li>• UNIFATEC – Santa Catarina</li>
@@ -1152,10 +1170,24 @@ export default function Home() {
                       <li>• FACEO – São Paulo (SP)</li>
                     </ul>
                   </div>
-                  <p className="text-sm text-gray-600">
-                    Declaração de não vínculo com fabricantes. Este aplicativo tem fins educativos e 
-                    não substitui orientação médica profissional.
-                  </p>
+
+                  <div>
+                    <h5 className="font-sem ibold text-gray-800 mb-2">Filosofia e Abordagem</h5>
+                    <p className="text-sm text-gray-700 mb-4">
+                      Ao longo de sua carreira, tem se destacado pela capacidade de unir sabedoria teológica, 
+                      conhecimento psicológico e visão filosófica em sua prática pastoral e educacional. Seu trabalho 
+                      reflete uma abordagem integral do ser humano — corpo, mente e espírito — voltada para a 
+                      transformação pessoal e social através do amor, da fé e do conhecimento.
+                    </p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <p className="text-xs text-gray-600 italic">
+                      <strong>Declaração de Independência:</strong> Este aplicativo tem fins educativos e não possui 
+                      vínculo comercial com fabricantes de medicamentos. As informações não substituem orientação 
+                      médica profissional.
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
