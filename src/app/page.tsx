@@ -22,20 +22,194 @@ import {
   Droplets,
   Apple,
   Download,
-  FileText
+  FileText,
+  TestTube,
+  TrendingDown,
+  Scale,
+  Plus,
+  LineChart,
+  Calculator,
+  Brain
 } from "lucide-react";
 import { generateMonitoringPDF, generateSampleData } from "@/lib/pdf-generator";
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+// Interfaces para os dados dos exames
+interface ExamData {
+  id: string;
+  date: string;
+  glicemiaJejum: number;
+  hba1c: number;
+  colesterolTotal: number;
+  hdl: number;
+  ldl: number;
+  triglicerideos: number;
+  tgo: number;
+  tgp: number;
+  ureia: number;
+  creatinina: number;
+  peso: number;
+  altura: number;
+  imc: number;
+  observacoes: string;
+}
+
+// Faixas de referência
+const referenciaExames = {
+  glicemiaJejum: { min: 70, max: 99, unidade: "mg/dL" },
+  hba1c: { normal: 5.7, preDiabetes: 6.4, diabetes: 6.5, unidade: "%" },
+  colesterolTotal: { max: 200, unidade: "mg/dL" },
+  hdl: { minHomem: 40, minMulher: 50, unidade: "mg/dL" },
+  ldl: { max: 130, unidade: "mg/dL" },
+  triglicerideos: { max: 150, unidade: "mg/dL" },
+  tgo: { max: 40, unidade: "U/L" },
+  tgp: { max: 41, unidade: "U/L" },
+  ureia: { min: 15, max: 45, unidade: "mg/dL" },
+  creatinina: { minHomem: 0.7, maxHomem: 1.3, minMulher: 0.6, maxMulher: 1.1, unidade: "mg/dL" },
+  imc: { baixoPeso: 18.5, normal: 24.9, sobrepeso: 29.9, unidade: "kg/m²" }
+};
+
+// Dados de exemplo para demonstração
+const exemploExames: ExamData[] = [
+  {
+    id: "1",
+    date: "2024-01-15",
+    glicemiaJejum: 145,
+    hba1c: 7.2,
+    colesterolTotal: 220,
+    hdl: 35,
+    ldl: 150,
+    triglicerideos: 180,
+    tgo: 45,
+    tgp: 48,
+    ureia: 35,
+    creatinina: 1.0,
+    peso: 88.5,
+    altura: 1.70,
+    imc: 30.6,
+    observacoes: "Início do tratamento com tirzepatida"
+  },
+  {
+    id: "2",
+    date: "2024-04-15",
+    glicemiaJejum: 125,
+    hba1c: 6.8,
+    colesterolTotal: 195,
+    hdl: 42,
+    ldl: 125,
+    triglicerideos: 140,
+    tgo: 38,
+    tgp: 35,
+    ureia: 32,
+    creatinina: 0.9,
+    peso: 85.2,
+    altura: 1.70,
+    imc: 29.5,
+    observacoes: "Melhora significativa nos parâmetros"
+  },
+  {
+    id: "3",
+    date: "2024-07-15",
+    glicemiaJejum: 98,
+    hba1c: 6.2,
+    colesterolTotal: 185,
+    hdl: 48,
+    ldl: 115,
+    triglicerideos: 120,
+    tgo: 32,
+    tgp: 28,
+    ureia: 28,
+    creatinina: 0.8,
+    peso: 82.1,
+    altura: 1.70,
+    imc: 28.4,
+    observacoes: "Excelente evolução, mantendo dieta e exercícios"
+  }
+];
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("home");
+  const [exames, setExames] = useState<ExamData[]>(exemploExames);
+  const [novoExame, setNovoExame] = useState<Partial<ExamData>>({
+    date: new Date().toISOString().split('T')[0],
+    altura: 1.70
+  });
+
+  const calcularIMC = (peso: number, altura: number): number => {
+    return Number((peso / (altura * altura)).toFixed(1));
+  };
+
+  const obterStatusExame = (valor: number, tipo: keyof typeof referenciaExames) => {
+    const ref = referenciaExames[tipo];
+    
+    switch (tipo) {
+      case 'glicemiaJejum':
+        if (valor >= ref.min && valor <= ref.max) return { status: 'normal', cor: 'text-green-600' };
+        return { status: 'alterado', cor: 'text-red-600' };
+      
+      case 'hba1c':
+        if (valor < ref.normal) return { status: 'normal', cor: 'text-green-600' };
+        if (valor <= ref.preDiabetes) return { status: 'pré-diabetes', cor: 'text-yellow-600' };
+        return { status: 'diabetes', cor: 'text-red-600' };
+      
+      case 'colesterolTotal':
+      case 'ldl':
+      case 'triglicerideos':
+        if (valor <= ref.max) return { status: 'normal', cor: 'text-green-600' };
+        return { status: 'elevado', cor: 'text-red-600' };
+      
+      default:
+        return { status: 'normal', cor: 'text-green-600' };
+    }
+  };
+
+  const calcularTendencia = (valorAtual: number, valorAnterior: number) => {
+    const diferenca = ((valorAtual - valorAnterior) / valorAnterior) * 100;
+    if (Math.abs(diferenca) < 2) return { icone: Scale, texto: 'estável', cor: 'text-gray-600' };
+    if (diferenca > 0) return { icone: TrendingUp, texto: `+${diferenca.toFixed(1)}%`, cor: 'text-red-600' };
+    return { icone: TrendingDown, texto: `${diferenca.toFixed(1)}%`, cor: 'text-green-600' };
+  };
+
+  const adicionarExame = () => {
+    if (novoExame.peso && novoExame.altura) {
+      const imc = calcularIMC(novoExame.peso, novoExame.altura);
+      const exame: ExamData = {
+        id: Date.now().toString(),
+        date: novoExame.date || new Date().toISOString().split('T')[0],
+        glicemiaJejum: novoExame.glicemiaJejum || 0,
+        hba1c: novoExame.hba1c || 0,
+        colesterolTotal: novoExame.colesterolTotal || 0,
+        hdl: novoExame.hdl || 0,
+        ldl: novoExame.ldl || 0,
+        triglicerideos: novoExame.triglicerideos || 0,
+        tgo: novoExame.tgo || 0,
+        tgp: novoExame.tgp || 0,
+        ureia: novoExame.ureia || 0,
+        creatinina: novoExame.creatinina || 0,
+        peso: novoExame.peso,
+        altura: novoExame.altura,
+        imc,
+        observacoes: novoExame.observacoes || ''
+      };
+      
+      setExames([...exames, exame].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+      setNovoExame({ date: new Date().toISOString().split('T')[0], altura: 1.70 });
+    }
+  };
 
   const handleExportPDF = () => {
-    // Para demonstração, vamos usar dados de exemplo
-    // Em uma aplicação real, estes dados viriam do estado da aplicação ou banco de dados
     const { monitoringData, nutritionData, patientInfo } = generateSampleData();
-    
     generateMonitoringPDF(monitoringData, nutritionData, patientInfo);
   };
+
+  // Preparar dados para gráficos
+  const dadosGrafico = exames.map(exame => ({
+    data: new Date(exame.date).toLocaleDateString('pt-BR'),
+    'Glicemia (mg/dL)': exame.glicemiaJejum,
+    'HbA1c (%)': exame.hba1c,
+    'Peso (kg)': exame.peso,
+    'IMC': exame.imc
+  }));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -58,12 +232,13 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-8">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 mb-8">
             <TabsTrigger value="home" className="text-xs">Início</TabsTrigger>
             <TabsTrigger value="about" className="text-xs">O que é</TabsTrigger>
             <TabsTrigger value="benefits" className="text-xs">Benefícios</TabsTrigger>
             <TabsTrigger value="guide" className="text-xs">Guia</TabsTrigger>
             <TabsTrigger value="monitoring" className="text-xs">Monitor</TabsTrigger>
+            <TabsTrigger value="exams" className="text-xs">Exames</TabsTrigger>
             <TabsTrigger value="news" className="text-xs">Notícias</TabsTrigger>
           </TabsList>
 
@@ -129,6 +304,18 @@ export default function Home() {
                 </CardHeader>
               </Card>
 
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setActiveTab("exams")}>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <TestTube className="h-5 w-5 text-indigo-600" />
+                    <span>Exames Laboratoriais</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Compare e acompanhe seus exames
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
               <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setActiveTab("news")}>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
@@ -137,18 +324,6 @@ export default function Home() {
                   </CardTitle>
                   <CardDescription>
                     Atualizações e avisos importantes
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Info className="h-5 w-5 text-gray-600" />
-                    <span>Sobre o App</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Informações sobre o criador e propósito
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -395,7 +570,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <Button onClick={handleExportPDF} className="bg-blue-600 hover:bg-blue-700">
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="h-4 w-4 mr-2"  />
                   Baixar Relatório PDF
                 </Button>
                 <p className="text-xs text-blue-600 mt-2">
@@ -482,6 +657,393 @@ export default function Home() {
                     <p className="text-xs text-gray-600">30min/dia</p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Comparador de Exames Laboratoriais */}
+          <TabsContent value="exams" className="space-y-6">
+            {/* Texto introdutório */}
+            <Card className="bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-indigo-800">
+                  <TestTube className="h-6 w-6" />
+                  <span>🧪 Comparador de Exames Laboratoriais</span>
+                </CardTitle>
+                <CardDescription className="text-indigo-700">
+                  Acompanhe seus exames e veja sua evolução. Compare glicemia, colesterol, peso e outros marcadores 
+                  clínicos importantes para quem utiliza Tirzepatida. Os gráficos ajudam você e seu médico a entender sua jornada de saúde.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            {/* Formulário para novo exame */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Plus className="h-5 w-5 text-green-600" />
+                  <span>Adicionar Novo Exame</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Data do Exame</label>
+                    <input 
+                      type="date" 
+                      className="w-full p-2 border rounded-md"
+                      value={novoExame.date}
+                      onChange={(e) => setNovoExame({...novoExame, date: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Glicemia de Jejum (mg/dL)</label>
+                    <input 
+                      type="number" 
+                      className="w-full p-2 border rounded-md" 
+                      placeholder="Ex: 95"
+                      value={novoExame.glicemiaJejum || ''}
+                      onChange={(e) => setNovoExame({...novoExame, glicemiaJejum: Number(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">HbA1c (%)</label>
+                    <input 
+                      type="number" 
+                      step="0.1" 
+                      className="w-full p-2 border rounded-md" 
+                      placeholder="Ex: 6.2"
+                      value={novoExame.hba1c || ''}
+                      onChange={(e) => setNovoExame({...novoExame, hba1c: Number(e.target.value)})}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Colesterol Total (mg/dL)</label>
+                    <input 
+                      type="number" 
+                      className="w-full p-2 border rounded-md" 
+                      placeholder="Ex: 180"
+                      value={novoExame.colesterolTotal || ''}
+                      onChange={(e) => setNovoExame({...novoExame, colesterolTotal: Number(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">HDL (mg/dL)</label>
+                    <input 
+                      type="number" 
+                      className="w-full p-2 border rounded-md" 
+                      placeholder="Ex: 45"
+                      value={novoExame.hdl || ''}
+                      onChange={(e) => setNovoExame({...novoExame, hdl: Number(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">LDL (mg/dL)</label>
+                    <input 
+                      type="number" 
+                      className="w-full p-2 border rounded-md" 
+                      placeholder="Ex: 120"
+                      value={novoExame.ldl || ''}
+                      onChange={(e) => setNovoExame({...novoExame, ldl: Number(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Triglicerídeos (mg/dL)</label>
+                    <input 
+                      type="number" 
+                      className="w-full p-2 border rounded-md" 
+                      placeholder="Ex: 140"
+                      value={novoExame.triglicerideos || ''}
+                      onChange={(e) => setNovoExame({...novoExame, triglicerideos: Number(e.target.value)})}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Peso (kg)</label>
+                    <input 
+                      type="number" 
+                      step="0.1" 
+                      className="w-full p-2 border rounded-md" 
+                      placeholder="Ex: 75.5"
+                      value={novoExame.peso || ''}
+                      onChange={(e) => setNovoExame({...novoExame, peso: Number(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Altura (m)</label>
+                    <input 
+                      type="number" 
+                      step="0.01" 
+                      className="w-full p-2 border rounded-md" 
+                      placeholder="Ex: 1.70"
+                      value={novoExame.altura || ''}
+                      onChange={(e) => setNovoExame({...novoExame, altura: Number(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">IMC (calculado)</label>
+                    <div className="w-full p-2 border rounded-md bg-gray-50 flex items-center">
+                      <Calculator className="h-4 w-4 text-gray-500 mr-2" />
+                      <span className="text-gray-700">
+                        {novoExame.peso && novoExame.altura ? calcularIMC(novoExame.peso, novoExame.altura) : '--'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Observações</label>
+                  <textarea 
+                    className="w-full p-2 border rounded-md" 
+                    rows={2} 
+                    placeholder="Observações sobre o exame..."
+                    value={novoExame.observacoes || ''}
+                    onChange={(e) => setNovoExame({...novoExame, observacoes: e.target.value})}
+                  ></textarea>
+                </div>
+
+                <Button onClick={adicionarExame} className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Exame
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Gráficos de Evolução */}
+            {exames.length > 1 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <LineChart className="h-5 w-5 text-blue-600" />
+                    <span>Evolução dos Exames</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsLineChart data={dadosGrafico}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="data" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="Glicemia (mg/dL)" stroke="#ef4444" strokeWidth={2} />
+                        <Line type="monotone" dataKey="HbA1c (%)" stroke="#f97316" strokeWidth={2} />
+                        <Line type="monotone" dataKey="Peso (kg)" stroke="#22c55e" strokeWidth={2} />
+                        <Line type="monotone" dataKey="IMC" stroke="#8b5cf6" strokeWidth={2} />
+                      </RechartsLineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Lista de Exames com Comparação */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <BarChart3 className="h-5 w-5 text-purple-600" />
+                  <span>Histórico de Exames</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {exames.map((exame, index) => {
+                    const examAnterior = index > 0 ? exames[index - 1] : null;
+                    
+                    return (
+                      <Card key={exame.id} className="border-l-4 border-l-blue-500">
+                        <CardContent className="pt-4">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h4 className="font-semibold text-lg">
+                                {new Date(exame.date).toLocaleDateString('pt-BR')}
+                              </h4>
+                              {exame.observacoes && (
+                                <p className="text-sm text-gray-600 mt-1">{exame.observacoes}</p>
+                              )}
+                            </div>
+                            {examAnterior && (
+                              <div className="text-right">
+                                <p className="text-xs text-gray-500">Comparado ao exame anterior</p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {/* Glicemia */}
+                            <div className="p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">Glicemia</span>
+                                {examAnterior && (() => {
+                                  const tendencia = calcularTendencia(exame.glicemiaJejum, examAnterior.glicemiaJejum);
+                                  const IconeTendencia = tendencia.icone;
+                                  return (
+                                    <div className={`flex items-center ${tendencia.cor}`}>
+                                      <IconeTendencia className="h-3 w-3 mr-1" />
+                                      <span className="text-xs">{tendencia.texto}</span>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                              <p className={`text-lg font-bold ${obterStatusExame(exame.glicemiaJejum, 'glicemiaJejum').cor}`}>
+                                {exame.glicemiaJejum} mg/dL
+                              </p>
+                              <p className="text-xs text-gray-500">Normal: 70-99 mg/dL</p>
+                            </div>
+
+                            {/* HbA1c */}
+                            <div className="p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">HbA1c</span>
+                                {examAnterior && (() => {
+                                  const tendencia = calcularTendencia(exame.hba1c, examAnterior.hba1c);
+                                  const IconeTendencia = tendencia.icone;
+                                  return (
+                                    <div className={`flex items-center ${tendencia.cor}`}>
+                                      <IconeTendencia className="h-3 w-3 mr-1" />
+                                      <span className="text-xs">{tendencia.texto}</span>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                              <p className={`text-lg font-bold ${obterStatusExame(exame.hba1c, 'hba1c').cor}`}>
+                                {exame.hba1c}%
+                              </p>
+                              <p className="text-xs text-gray-500">Normal: &lt; 5,7%</p>
+                            </div>
+
+                            {/* Peso */}
+                            <div className="p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">Peso</span>
+                                {examAnterior && (() => {
+                                  const tendencia = calcularTendencia(exame.peso, examAnterior.peso);
+                                  const IconeTendencia = tendencia.icone;
+                                  return (
+                                    <div className={`flex items-center ${tendencia.cor}`}>
+                                      <IconeTendencia className="h-3 w-3 mr-1" />
+                                      <span className="text-xs">{tendencia.texto}</span>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                              <p className="text-lg font-bold text-blue-600">{exame.peso} kg</p>
+                              <p className="text-xs text-gray-500">IMC: {exame.imc}</p>
+                            </div>
+
+                            {/* Colesterol Total */}
+                            <div className="p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">Colesterol</span>
+                                {examAnterior && (() => {
+                                  const tendencia = calcularTendencia(exame.colesterolTotal, examAnterior.colesterolTotal);
+                                  const IconeTendencia = tendencia.icone;
+                                  return (
+                                    <div className={`flex items-center ${tendencia.cor}`}>
+                                      <IconeTendencia className="h-3 w-3 mr-1" />
+                                      <span className="text-xs">{tendencia.texto}</span>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                              <p className={`text-lg font-bold ${obterStatusExame(exame.colesterolTotal, 'colesterolTotal').cor}`}>
+                                {exame.colesterolTotal} mg/dL
+                              </p>
+                              <p className="text-xs text-gray-500">Ideal: &lt; 200 mg/dL</p>
+                            </div>
+                          </div>
+
+                          {/* Alertas de valores fora da faixa */}
+                          <div className="mt-4 space-y-2">
+                            {exame.glicemiaJejum > 99 && (
+                              <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-2 rounded">
+                                <AlertTriangle className="h-4 w-4" />
+                                <span className="text-sm">Glicemia acima do normal. Consulte seu médico.</span>
+                              </div>
+                            )}
+                            {exame.hba1c >= 6.5 && (
+                              <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-2 rounded">
+                                <AlertTriangle className="h-4 w-4" />
+                                <span className="text-sm">HbA1c indica diabetes. Acompanhamento médico necessário.</span>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Análise Inteligente */}
+            {exames.length > 1 && (
+              <Card className="bg-green-50 border-green-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-green-800">
+                    <Brain className="h-5 w-5" />
+                    <span>Análise Inteligente</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-green-700">
+                  <div className="space-y-2">
+                    {(() => {
+                      const ultimoExame = exames[exames.length - 1];
+                      const primeiroExame = exames[0];
+                      const melhoraHbA1c = ((primeiroExame.hba1c - ultimoExame.hba1c) / primeiroExame.hba1c) * 100;
+                      const perdaPeso = ((primeiroExame.peso - ultimoExame.peso) / primeiroExame.peso) * 100;
+                      
+                      return (
+                        <>
+                          <p className="text-sm">
+                            <strong>Evolução Geral:</strong> Sua hemoglobina glicada {melhoraHbA1c > 0 ? 'melhorou' : 'piorou'} em {Math.abs(melhoraHbA1c).toFixed(1)}% 
+                            e você {perdaPeso > 0 ? 'perdeu' : 'ganhou'} {Math.abs(perdaPeso).toFixed(1)}% do peso inicial.
+                          </p>
+                          {melhoraHbA1c > 5 && perdaPeso > 3 && (
+                            <p className="text-sm">
+                              <strong>Parabéns!</strong> Sua evolução está excelente. Continue mantendo uma dieta equilibrada, 
+                              boa hidratação e siga as orientações médicas.
+                            </p>
+                          )}
+                          {ultimoExame.hba1c < 7.0 && (
+                            <p className="text-sm">
+                              <strong>Meta Alcançada:</strong> Sua HbA1c está dentro da meta para diabéticos (&lt; 7%). 
+                              Mantenha o bom trabalho!
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Exportar Relatório de Exames */}
+            <Card className="bg-blue-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-blue-800">
+                  <FileText className="h-5 w-5" />
+                  <span>Relatório de Exames</span>
+                </CardTitle>
+                <CardDescription className="text-blue-700">
+                  Exporte um relatório completo com todos os seus exames laboratoriais
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Download className="h-4 w-4 mr-2" />
+                  Exportar Relatório de Exames (PDF)
+                </Button>
+                <p className="text-xs text-blue-600 mt-2">
+                  Inclui gráficos, evolução temporal e análise comparativa
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
