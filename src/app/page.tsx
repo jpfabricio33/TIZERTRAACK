@@ -36,10 +36,14 @@ import {
   Upload,
   Eye,
   X,
-  ZoomIn
+  ZoomIn,
+  Settings,
+  Crown
 } from "lucide-react";
 import { generateMonitoringPDF, generateSampleData } from "@/lib/pdf-generator";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
+import { SubscriptionGate } from '@/components/SubscriptionGate';
 
 // Interfaces para os dados dos exames
 interface ExamData {
@@ -167,7 +171,7 @@ const exemploFotos: FotoProgresso[] = [
   }
 ];
 
-export default function Home() {
+function TirzeTrackApp() {
   const [activeTab, setActiveTab] = useState("home");
   const [exames, setExames] = useState<ExamData[]>(exemploExames);
   const [novoExame, setNovoExame] = useState<Partial<ExamData>>({
@@ -183,6 +187,8 @@ export default function Home() {
   });
   const [fotoSelecionada, setFotoSelecionada] = useState<FotoProgresso | null>(null);
   const [mostrarModal, setMostrarModal] = useState(false);
+
+  const { subscription } = useSubscription();
 
   const calcularIMC = (peso: number, altura: number): number => {
     return Number((peso / (altura * altura)).toFixed(1));
@@ -315,10 +321,25 @@ export default function Home() {
                 <Pill className="h-6 w-6 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-gray-900">TirzeTrack</h1>
+              {subscription.isActive && (
+                <span className="bg-amber-100 text-amber-800 text-xs font-medium px-2 py-1 rounded-full flex items-center">
+                  <Crown className="h-3 w-3 mr-1" />
+                  Premium
+                </span>
+              )}
             </div>
-            <p className="text-sm text-gray-600 hidden md:block">
-              Informações científicas sobre tirzepatida
-            </p>
+            <div className="flex items-center space-x-4">
+              <p className="text-sm text-gray-600 hidden md:block">
+                Informações científicas sobre tirzepatida
+              </p>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => window.location.href = '/subscription/manage'}
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -378,6 +399,7 @@ export default function Home() {
                   <CardTitle className="flex items-center space-x-2">
                     <Shield className="h-5 w-5 text-green-600" />
                     <span>Guia de Uso Seguro</span>
+                    {!subscription.isActive && <Lock className="h-4 w-4 text-amber-600" />}
                   </CardTitle>
                   <CardDescription>
                     Boas práticas e orientações de aplicação
@@ -390,6 +412,7 @@ export default function Home() {
                   <CardTitle className="flex items-center space-x-2">
                     <BarChart3 className="h-5 w-5 text-purple-600" />
                     <span>Monitoramento Pessoal</span>
+                    {!subscription.isActive && <Lock className="h-4 w-4 text-amber-600" />}
                   </CardTitle>
                   <CardDescription>
                     Acompanhe seu progresso e sintomas
@@ -402,6 +425,7 @@ export default function Home() {
                   <CardTitle className="flex items-center space-x-2">
                     <TestTube className="h-5 w-5 text-indigo-600" />
                     <span>Exames Laboratoriais</span>
+                    {!subscription.isActive && <Lock className="h-4 w-4 text-amber-600" />}
                   </CardTitle>
                   <CardDescription>
                     Compare e acompanhe seus exames
@@ -414,6 +438,7 @@ export default function Home() {
                   <CardTitle className="flex items-center space-x-2">
                     <Bell className="h-5 w-5 text-orange-600" />
                     <span>Notícias e Alertas</span>
+                    {!subscription.isActive && <Lock className="h-4 w-4 text-amber-600" />}
                   </CardTitle>
                   <CardDescription>
                     Atualizações e avisos importantes
@@ -602,362 +627,374 @@ export default function Home() {
             </Card>
           </TabsContent>
 
-          {/* Guia de Uso Seguro */}
+          {/* Guia de Uso Seguro - PREMIUM */}
           <TabsContent value="guide" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Syringe className="h-6 w-6 text-green-600" />
-                  <span>Guia de Uso Seguro</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-semibold mb-3">Aplicação</h3>
-                    <ul className="space-y-2 text-sm">
-                      <li>• Aplicação subcutânea</li>
-                      <li>• Locais: abdômen, coxa, braço</li>
-                      <li>• Dose inicial: 2,5 mg/semana</li>
-                      <li>• Manter mesmo dia e horário</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-3">Armazenamento</h3>
-                    <ul className="space-y-2 text-sm">
-                      <li>• Refrigeração (2–8 °C)</li>
-                      <li>• Nunca reutilizar seringas</li>
-                      <li>• Verificar validade</li>
-                      <li>• Proteger da luz</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <Card className="bg-green-50 border-green-200">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Calendar className="h-5 w-5 text-green-600" />
-                      <span className="font-medium text-green-800">Checklist Semanal</span>
+            <SubscriptionGate 
+              feature="guide" 
+              title="Guia de Uso Seguro"
+              description="Acesse orientações completas e seguras para o uso da tirzepatida."
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Syringe className="h-6 w-6 text-green-600" />
+                    <span>Guia de Uso Seguro</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold mb-3">Aplicação</h3>
+                      <ul className="space-y-2 text-sm">
+                        <li>• Aplicação subcutânea</li>
+                        <li>• Locais: abdômen, coxa, braço</li>
+                        <li>• Dose inicial: 2,5 mg/semana</li>
+                        <li>• Manter mesmo dia e horário</li>
+                      </ul>
                     </div>
-                    <p className="text-green-700 text-sm">
-                      Você já aplicou sua dose desta semana? Mantenha a regularidade para melhores resultados.
-                    </p>
-                  </CardContent>
-                </Card>
-              </CardContent>
-            </Card>
+                    <div>
+                      <h3 className="font-semibold mb-3">Armazenamento</h3>
+                      <ul className="space-y-2 text-sm">
+                        <li>• Refrigeração (2–8 °C)</li>
+                        <li>• Nunca reutilizar seringas</li>
+                        <li>• Verificar validade</li>
+                        <li>• Proteger da luz</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <Card className="bg-green-50 border-green-200">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Calendar className="h-5 w-5 text-green-600" />
+                        <span className="font-medium text-green-800">Checklist Semanal</span>
+                      </div>
+                      <p className="text-green-700 text-sm">
+                        Você já aplicou sua dose desta semana? Mantenha a regularidade para melhores resultados.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </CardContent>
+              </Card>
+            </SubscriptionGate>
           </TabsContent>
 
-          {/* Monitoramento Pessoal - ATUALIZADO COM FOTOS */}
+          {/* Monitoramento Pessoal - PREMIUM */}
           <TabsContent value="monitoring" className="space-y-6">
-            {/* Botão de Exportar PDF */}
-            <Card className="bg-blue-50 border-blue-200">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-blue-800">
-                  <FileText className="h-5 w-5" />
-                  <span>Relatório para o Médico</span>
-                </CardTitle>
-                <CardDescription className="text-blue-700">
-                  Exporte seus dados de monitoramento em PDF para levar na consulta médica
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={handleExportPDF} className="bg-blue-600 hover:bg-blue-700">
-                  <Download className="h-4 w-4 mr-2"  />
-                  Baixar Relatório PDF
-                </Button>
-                <p className="text-xs text-blue-600 mt-2">
-                  O relatório inclui registros de peso, glicemia, sintomas e dados nutricionais
-                </p>
-              </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+            <SubscriptionGate 
+              feature="monitoring" 
+              title="Monitoramento Pessoal Completo"
+              description="Registre seu progresso, sintomas e acompanhe sua jornada com a tirzepatida."
+            >
+              {/* Botão de Exportar PDF */}
+              <Card className="bg-blue-50 border-blue-200">
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <BarChart3 className="h-5 w-5 text-purple-600" />
-                    <span>Registro de Progresso</span>
+                  <CardTitle className="flex items-center space-x-2 text-blue-800">
+                    <FileText className="h-5 w-5" />
+                    <span>Relatório para o Médico</span>
                   </CardTitle>
+                  <CardDescription className="text-blue-700">
+                    Exporte seus dados de monitoramento em PDF para levar na consulta médica
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Peso (kg)</label>
-                    <input type="number" className="w-full p-2 border rounded-md" placeholder="Ex: 75.5" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Glicemia (mg/dL)</label>
-                    <input type="number" className="w-full p-2 border rounded-md" placeholder="Ex: 120" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Sintomas</label>
-                    <textarea className="w-full p-2 border rounded-md" rows={3} placeholder="Descreva como se sente..."></textarea>
-                  </div>
-                  <Button className="w-full">Salvar Registro</Button>
+                <CardContent>
+                  <Button onClick={handleExportPDF} className="bg-blue-600 hover:bg-blue-700">
+                    <Download className="h-4 w-4 mr-2"  />
+                    Baixar Relatório PDF
+                  </Button>
+                  <p className="text-xs text-blue-600 mt-2">
+                    O relatório inclui registros de peso, glicemia, sintomas e dados nutricionais
+                  </p>
                 </CardContent>
               </Card>
 
-              <Card>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <BarChart3 className="h-5 w-5 text-purple-600" />
+                      <span>Registro de Progresso</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Peso (kg)</label>
+                      <input type="number" className="w-full p-2 border rounded-md" placeholder="Ex: 75.5" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Glicemia (mg/dL)</label>
+                      <input type="number" className="w-full p-2 border rounded-md" placeholder="Ex: 120" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Sintomas</label>
+                      <textarea className="w-full p-2 border rounded-md" rows={3} placeholder="Descreva como se sente..."></textarea>
+                    </div>
+                    <Button className="w-full">Salvar Registro</Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Apple className="h-5 w-5 text-orange-600" />
+                      <span>Acompanhamento Nutricional</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Água (L)</label>
+                        <input type="number" step="0.1" className="w-full p-2 border rounded-md" placeholder="2.0" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Proteínas (g)</label>
+                        <input type="number" className="w-full p-2 border rounded-md" placeholder="80" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Fibras (g)</label>
+                        <input type="number" className="w-full p-2 border rounded-md" placeholder="25" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Carboidratos (g)</label>
+                        <input type="number" className="w-full p-2 border rounded-md" placeholder="150" />
+                      </div>
+                    </div>
+                    <Button className="w-full">Registrar Nutrição</Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* SEÇÃO: Fotos de Progresso */}
+              <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Apple className="h-5 w-5 text-orange-600" />
-                    <span>Acompanhamento Nutricional</span>
+                  <CardTitle className="flex items-center space-x-2 text-purple-800">
+                    <Camera className="h-6 w-6" />
+                    <span>📸 Fotos de Progresso – Antes e Depois</span>
                   </CardTitle>
+                  <CardDescription className="text-purple-700">
+                    Acompanhe sua transformação! Adicione suas fotos de antes e depois para visualizar seu progresso de forma real e inspiradora. 
+                    Toda imagem é confidencial e pertence somente a você.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium">Água (L)</label>
-                      <input type="number" step="0.1" className="w-full p-2 border rounded-md" placeholder="2.0" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Proteínas (g)</label>
-                      <input type="number" className="w-full p-2 border rounded-md" placeholder="80" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Fibras (g)</label>
-                      <input type="number" className="w-full p-2 border rounded-md" placeholder="25" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Carboidratos (g)</label>
-                      <input type="number" className="w-full p-2 border rounded-md" placeholder="150" />
-                    </div>
-                  </div>
-                  <Button className="w-full">Registrar Nutrição</Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* NOVA SEÇÃO: Fotos de Progresso */}
-            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-purple-800">
-                  <Camera className="h-6 w-6" />
-                  <span>📸 Fotos de Progresso – Antes e Depois</span>
-                </CardTitle>
-                <CardDescription className="text-purple-700">
-                  Acompanhe sua transformação! Adicione suas fotos de antes e depois para visualizar seu progresso de forma real e inspiradora. 
-                  Toda imagem é confidencial e pertence somente a você.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Aviso de Privacidade */}
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <div className="flex items-start space-x-3">
-                    <Lock className="h-5 w-5 text-green-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-green-800 mb-1">🔒 Privacidade e Segurança</h4>
-                      <p className="text-sm text-green-700">
-                        Suas fotos são armazenadas com segurança e visíveis apenas para você. 
-                        O compartilhamento é opcional e depende da sua autorização.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Formulário para Nova Foto */}
-                <div className="bg-white p-6 rounded-lg border border-gray-200">
-                  <h4 className="font-semibold mb-4 flex items-center">
-                    <Plus className="h-4 w-4 mr-2 text-blue-600" />
-                    Adicionar Nova Foto
-                  </h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="text-sm font-medium">Data da Foto</label>
-                      <input 
-                        type="date" 
-                        className="w-full p-2 border rounded-md"
-                        value={novaFoto.data}
-                        onChange={(e) => setNovaFoto({...novaFoto, data: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Tipo</label>
-                      <select 
-                        className="w-full p-2 border rounded-md"
-                        value={novaFoto.tipo}
-                        onChange={(e) => setNovaFoto({...novaFoto, tipo: e.target.value as 'antes' | 'depois'})}
-                      >
-                        <option value="antes">Antes</option>
-                        <option value="depois">Depois</option>
-                      </select>
+                <CardContent className="space-y-6">
+                  {/* Aviso de Privacidade */}
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div className="flex items-start space-x-3">
+                      <Lock className="h-5 w-5 text-green-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-green-800 mb-1">🔒 Privacidade e Segurança</h4>
+                        <p className="text-sm text-green-700">
+                          Suas fotos são armazenadas com segurança e visíveis apenas para você. 
+                          O compartilhamento é opcional e depende da sua autorização.
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="text-sm font-medium">Peso (kg) - Opcional</label>
-                      <input 
-                        type="number" 
-                        step="0.1"
-                        className="w-full p-2 border rounded-md" 
-                        placeholder="Ex: 85.5"
-                        value={novaFoto.peso || ''}
-                        onChange={(e) => setNovaFoto({...novaFoto, peso: Number(e.target.value)})}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Observação</label>
-                      <input 
-                        type="text" 
-                        className="w-full p-2 border rounded-md" 
-                        placeholder="Ex: 2ª semana de uso da Tirzepatida"
-                        value={novaFoto.observacao || ''}
-                        onChange={(e) => setNovaFoto({...novaFoto, observacao: e.target.value})}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="text-sm font-medium mb-2 block">Selecionar Foto</label>
-                    <div className="flex items-center space-x-4">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleUploadFoto}
-                        className="hidden" 
-                        id="upload-foto"
-                      />
-                      <label 
-                        htmlFor="upload-foto" 
-                        className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-700 transition-colors"
-                      >
-                        <Upload className="h-4 w-4" />
-                        <span>Adicionar Foto</span>
-                      </label>
-                      <p className="text-xs text-gray-500">Galeria ou câmera</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Galeria de Fotos */}
-                {fotosProgresso.length > 0 && (
+                  {/* Formulário para Nova Foto */}
                   <div className="bg-white p-6 rounded-lg border border-gray-200">
                     <h4 className="font-semibold mb-4 flex items-center">
-                      <Eye className="h-4 w-4 mr-2 text-purple-600" />
-                      Sua Galeria de Progresso
+                      <Plus className="h-4 w-4 mr-2 text-blue-600" />
+                      Adicionar Nova Foto
                     </h4>
-
-                    {/* Comparação Antes e Depois */}
-                    {calcularDiferencaPeso() && (
-                      <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg mb-6 border border-green-200">
-                        <h5 className="font-medium text-green-800 mb-2">📈 Resumo da Transformação</h5>
-                        {(() => {
-                          const diff = calcularDiferencaPeso()!;
-                          return (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                              <div>
-                                <p className="text-gray-600">Peso Inicial</p>
-                                <p className="font-bold text-lg">{diff.pesoAntes} kg</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600">Peso Atual</p>
-                                <p className="font-bold text-lg">{diff.pesoDepois} kg</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600">Diferença</p>
-                                <p className="font-bold text-lg text-green-600">-{diff.diferenca.toFixed(1)} kg</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600">Período</p>
-                                <p className="font-bold text-lg">{diff.semanas} semanas</p>
-                              </div>
-                            </div>
-                          );
-                        })()}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="text-sm font-medium">Data da Foto</label>
+                        <input 
+                          type="date" 
+                          className="w-full p-2 border rounded-md"
+                          value={novaFoto.data}
+                          onChange={(e) => setNovaFoto({...novaFoto, data: e.target.value})}
+                        />
                       </div>
-                    )}
+                      <div>
+                        <label className="text-sm font-medium">Tipo</label>
+                        <select 
+                          className="w-full p-2 border rounded-md"
+                          value={novaFoto.tipo}
+                          onChange={(e) => setNovaFoto({...novaFoto, tipo: e.target.value as 'antes' | 'depois'})}
+                        >
+                          <option value="antes">Antes</option>
+                          <option value="depois">Depois</option>
+                        </select>
+                      </div>
+                    </div>
 
-                    {/* Grid de Fotos */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {fotosProgresso.map((foto) => (
-                        <div key={foto.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                          <div className="relative mb-3">
-                            <img 
-                              src={foto.imagem} 
-                              alt={`Foto ${foto.tipo}`}
-                              className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => abrirModal(foto)}
-                            />
-                            <div className="absolute top-2 right-2">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                foto.tipo === 'antes' 
-                                  ? 'bg-blue-100 text-blue-800' 
-                                  : 'bg-green-100 text-green-800'
-                              }`}>
-                                {foto.tipo === 'antes' ? 'Antes' : 'Depois'}
-                              </span>
-                            </div>
-                            <button 
-                              onClick={() => abrirModal(foto)}
-                              className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 transition-all"
-                            >
-                              <ZoomIn className="h-4 w-4" />
-                            </button>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <p className="text-sm font-medium">
-                              📅 {new Date(foto.data).toLocaleDateString('pt-BR')}
-                            </p>
-                            {foto.observacao && (
-                              <p className="text-xs text-gray-600">{foto.observacao}</p>
-                            )}
-                            {foto.peso && (
-                              <div className="flex items-center space-x-4 text-xs">
-                                <span>Peso: {foto.peso} kg</span>
-                                {foto.imc && <span>IMC: {foto.imc}</span>}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="text-sm font-medium">Peso (kg) - Opcional</label>
+                        <input 
+                          type="number" 
+                          step="0.1"
+                          className="w-full p-2 border rounded-md" 
+                          placeholder="Ex: 85.5"
+                          value={novaFoto.peso || ''}
+                          onChange={(e) => setNovaFoto({...novaFoto, peso: Number(e.target.value)})}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Observação</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-2 border rounded-md" 
+                          placeholder="Ex: 2ª semana de uso da Tirzepatida"
+                          value={novaFoto.observacao || ''}
+                          onChange={(e) => setNovaFoto({...novaFoto, observacao: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="text-sm font-medium mb-2 block">Selecionar Foto</label>
+                      <div className="flex items-center space-x-4">
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleUploadFoto}
+                          className="hidden" 
+                          id="upload-foto"
+                        />
+                        <label 
+                          htmlFor="upload-foto" 
+                          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-700 transition-colors"
+                        >
+                          <Upload className="h-4 w-4" />
+                          <span>Adicionar Foto</span>
+                        </label>
+                        <p className="text-xs text-gray-500">Galeria ou câmera</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Galeria de Fotos */}
+                  {fotosProgresso.length > 0 && (
+                    <div className="bg-white p-6 rounded-lg border border-gray-200">
+                      <h4 className="font-semibold mb-4 flex items-center">
+                        <Eye className="h-4 w-4 mr-2 text-purple-600" />
+                        Sua Galeria de Progresso
+                      </h4>
+
+                      {/* Comparação Antes e Depois */}
+                      {calcularDiferencaPeso() && (
+                        <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg mb-6 border border-green-200">
+                          <h5 className="font-medium text-green-800 mb-2">📈 Resumo da Transformação</h5>
+                          {(() => {
+                            const diff = calcularDiferencaPeso()!;
+                            return (
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                  <p className="text-gray-600">Peso Inicial</p>
+                                  <p className="font-bold text-lg">{diff.pesoAntes} kg</p>
+                                </div>
+                                <div>
+                                  <p className="text-gray-600">Peso Atual</p>
+                                  <p className="font-bold text-lg">{diff.pesoDepois} kg</p>
+                                </div>
+                                <div>
+                                  <p className="text-gray-600">Diferença</p>
+                                  <p className="font-bold text-lg text-green-600">-{diff.diferenca.toFixed(1)} kg</p>
+                                </div>
+                                <div>
+                                  <p className="text-gray-600">Período</p>
+                                  <p className="font-bold text-lg">{diff.semanas} semanas</p>
+                                </div>
                               </div>
-                            )}
-                          </div>
+                            );
+                          })()}
                         </div>
-                      ))}
+                      )}
+
+                      {/* Grid de Fotos */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {fotosProgresso.map((foto) => (
+                          <div key={foto.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="relative mb-3">
+                              <img 
+                                src={foto.imagem} 
+                                alt={`Foto ${foto.tipo}`}
+                                className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                onClick={() => abrirModal(foto)}
+                              />
+                              <div className="absolute top-2 right-2">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  foto.tipo === 'antes' 
+                                    ? 'bg-blue-100 text-blue-800' 
+                                    : 'bg-green-100 text-green-800'
+                                }`}>
+                                  {foto.tipo === 'antes' ? 'Antes' : 'Depois'}
+                                </span>
+                              </div>
+                              <button 
+                                onClick={() => abrirModal(foto)}
+                                className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 transition-all"
+                              >
+                                <ZoomIn className="h-4 w-4" />
+                              </button>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium">
+                                📅 {new Date(foto.data).toLocaleDateString('pt-BR')}
+                              </p>
+                              {foto.observacao && (
+                                <p className="text-xs text-gray-600">{foto.observacao}</p>
+                              )}
+                              {foto.peso && (
+                                <div className="flex items-center space-x-4 text-xs">
+                                  <span>Peso: {foto.peso} kg</span>
+                                  {foto.imc && <span>IMC: {foto.imc}</span>}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Botão de Exportar com Fotos */}
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-blue-800">Exportar com Relatório Médico</h4>
+                        <p className="text-sm text-blue-700">Inclua fotos comparativas e dados de progresso no PDF</p>
+                      </div>
+                      <Button className="bg-blue-600 hover:bg-blue-700">
+                        <Download className="h-4 w-4 mr-2" />
+                        Exportar com Fotos
+                      </Button>
                     </div>
                   </div>
-                )}
+                </CardContent>
+              </Card>
 
-                {/* Botão de Exportar com Fotos */}
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-blue-800">Exportar com Relatório Médico</h4>
-                      <p className="text-sm text-blue-700">Inclua fotos comparativas e dados de progresso no PDF</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Lembretes e Metas</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-blue-50 rounded-lg text-center">
+                      <Droplets className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                      <p className="text-sm font-medium">Beba água</p>
+                      <p className="text-xs text-gray-600">Meta: 2L/dia</p>
                     </div>
-                    <Button className="bg-blue-600 hover:bg-blue-700">
-                      <Download className="h-4 w-4 mr-2" />
-                      Exportar com Fotos
-                    </Button>
+                    <div className="p-4 bg-green-50 rounded-lg text-center">
+                      <Apple className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                      <p className="text-sm font-medium">Refeição saudável</p>
+                      <p className="text-xs text-gray-600">Inclua fibras</p>
+                    </div>
+                    <div className="p-4 bg-purple-50 rounded-lg text-center">
+                      <Activity className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                      <p className="text-sm font-medium">Atividade física</p>
+                      <p className="text-xs text-gray-600">30min/dia</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Lembretes e Metas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-blue-50 rounded-lg text-center">
-                    <Droplets className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                    <p className="text-sm font-medium">Beba água</p>
-                    <p className="text-xs text-gray-600">Meta: 2L/dia</p>
-                  </div>
-                  <div className="p-4 bg-green-50 rounded-lg text-center">
-                    <Apple className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                    <p className="text-sm font-medium">Refeição saudável</p>
-                    <p className="text-xs text-gray-600">Inclua fibras</p>
-                  </div>
-                  <div className="p-4 bg-purple-50 rounded-lg text-center">
-                    <Activity className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                    <p className="text-sm font-medium">Atividade física</p>
-                    <p className="text-xs text-gray-600">30min/dia</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </SubscriptionGate>
           </TabsContent>
 
           {/* Modal para Visualização de Foto em Tela Cheia */}
@@ -995,575 +1032,595 @@ export default function Home() {
             </div>
           )}
 
-          {/* Comparador de Exames Laboratoriais */}
+          {/* Comparador de Exames Laboratoriais - PREMIUM */}
           <TabsContent value="exams" className="space-y-6">
-            {/* Texto introdutório */}
-            <Card className="bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-indigo-800">
-                  <TestTube className="h-6 w-6" />
-                  <span>🧪 Comparador de Exames Laboratoriais</span>
-                </CardTitle>
-                <CardDescription className="text-indigo-700">
-                  Acompanhe seus exames e veja sua evolução. Compare glicemia, colesterol, peso e outros marcadores 
-                  clínicos importantes para quem utiliza Tirzepatida. Os gráficos ajudam você e seu médico a entender sua jornada de saúde.
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <SubscriptionGate 
+              feature="exams" 
+              title="Comparador de Exames Laboratoriais"
+              description="Compare e acompanhe seus exames laboratoriais ao longo do tempo."
+            >
+              {/* Texto introdutório */}
+              <Card className="bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-indigo-800">
+                    <TestTube className="h-6 w-6" />
+                    <span>🧪 Comparador de Exames Laboratoriais</span>
+                  </CardTitle>
+                  <CardDescription className="text-indigo-700">
+                    Acompanhe seus exames e veja sua evolução. Compare glicemia, colesterol, peso e outros marcadores 
+                    clínicos importantes para quem utiliza Tirzepatida. Os gráficos ajudam você e seu médico a entender sua jornada de saúde.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
 
-            {/* Formulário para novo exame */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Plus className="h-5 w-5 text-green-600" />
-                  <span>Adicionar Novo Exame</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="text-sm font-medium">Data do Exame</label>
-                    <input 
-                      type="date" 
-                      className="w-full p-2 border rounded-md"
-                      value={novoExame.date}
-                      onChange={(e) => setNovoExame({...novoExame, date: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Glicemia de Jejum (mg/dL)</label>
-                    <input 
-                      type="number" 
-                      className="w-full p-2 border rounded-md" 
-                      placeholder="Ex: 95"
-                      value={novoExame.glicemiaJejum || ''}
-                      onChange={(e) => setNovoExame({...novoExame, glicemiaJejum: Number(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">HbA1c (%)</label>
-                    <input 
-                      type="number" 
-                      step="0.1" 
-                      className="w-full p-2 border rounded-md" 
-                      placeholder="Ex: 6.2"
-                      value={novoExame.hba1c || ''}
-                      onChange={(e) => setNovoExame({...novoExame, hba1c: Number(e.target.value)})}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="text-sm font-medium">Colesterol Total (mg/dL)</label>
-                    <input 
-                      type="number" 
-                      className="w-full p-2 border rounded-md" 
-                      placeholder="Ex: 180"
-                      value={novoExame.colesterolTotal || ''}
-                      onChange={(e) => setNovoExame({...novoExame, colesterolTotal: Number(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">HDL (mg/dL)</label>
-                    <input 
-                      type="number" 
-                      className="w-full p-2 border rounded-md" 
-                      placeholder="Ex: 45"
-                      value={novoExame.hdl || ''}
-                      onChange={(e) => setNovoExame({...novoExame, hdl: Number(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">LDL (mg/dL)</label>
-                    <input 
-                      type="number" 
-                      className="w-full p-2 border rounded-md" 
-                      placeholder="Ex: 120"
-                      value={novoExame.ldl || ''}
-                      onChange={(e) => setNovoExame({...novoExame, ldl: Number(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Triglicerídeos (mg/dL)</label>
-                    <input 
-                      type="number" 
-                      className="w-full p-2 border rounded-md" 
-                      placeholder="Ex: 140"
-                      value={novoExame.triglicerideos || ''}
-                      onChange={(e) => setNovoExame({...novoExame, triglicerideos: Number(e.target.value)})}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="text-sm font-medium">Peso (kg)</label>
-                    <input 
-                      type="number" 
-                      step="0.1" 
-                      className="w-full p-2 border rounded-md" 
-                      placeholder="Ex: 75.5"
-                      value={novoExame.peso || ''}
-                      onChange={(e) => setNovoExame({...novoExame, peso: Number(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Altura (m)  </label>
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      className="w-full p-2 border rounded-md" 
-                      placeholder="Ex: 1.70"
-                      value={novoExame.altura || ''}
-                      onChange={(e) => setNovoExame({...novoExame, altura: Number(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">IMC (calculado)</label>
-                    <div className="w-full p-2 border rounded-md bg-gray-50 flex items-center">
-                      <Calculator className="h-4 w-4 text-gray-500 mr-2" />
-                      <span className="text-gray-700">
-                        {novoExame.peso && novoExame.altura ? calcularIMC(novoExame.peso, novoExame.altura) : '--'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Observações</label>
-                  <textarea 
-                    className="w-full p-2 border rounded-md" 
-                    rows={2} 
-                    placeholder="Observações sobre o exame..."
-                    value={novoExame.observacoes || ''}
-                    onChange={(e) => setNovoExame({...novoExame, observacoes: e.target.value})}
-                  ></textarea>
-                </div>
-
-                <Button onClick={adicionarExame} className="w-full">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Exame
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Gráficos de Evolução */}
-            {exames.length > 1 && (
+              {/* Formulário para novo exame */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <LineChart className="h-5 w-5 text-blue-600" />
-                    <span>Evolução dos Exames</span>
+                    <Plus className="h-5 w-5 text-green-600" />
+                    <span>Adicionar Novo Exame</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Data do Exame</label>
+                      <input 
+                        type="date" 
+                        className="w-full p-2 border rounded-md"
+                        value={novoExame.date}
+                        onChange={(e) => setNovoExame({...novoExame, date: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Glicemia de Jejum (mg/dL)</label>
+                      <input 
+                        type="number" 
+                        className="w-full p-2 border rounded-md" 
+                        placeholder="Ex: 95"
+                        value={novoExame.glicemiaJejum || ''}
+                        onChange={(e) => setNovoExame({...novoExame, glicemiaJejum: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">HbA1c (%)</label>
+                      <input 
+                        type="number" 
+                        step="0.1" 
+                        className="w-full p-2 border rounded-md" 
+                        placeholder="Ex: 6.2"
+                        value={novoExame.hba1c || ''}
+                        onChange={(e) => setNovoExame({...novoExame, hba1c: Number(e.target.value)})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Colesterol Total (mg/dL)</label>
+                      <input 
+                        type="number" 
+                        className="w-full p-2 border rounded-md" 
+                        placeholder="Ex: 180"
+                        value={novoExame.colesterolTotal || ''}
+                        onChange={(e) => setNovoExame({...novoExame, colesterolTotal: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">HDL (mg/dL)</label>
+                      <input 
+                        type="number" 
+                        className="w-full p-2 border rounded-md" 
+                        placeholder="Ex: 45"
+                        value={novoExame.hdl || ''}
+                        onChange={(e) => setNovoExame({...novoExame, hdl: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">LDL (mg/dL)</label>
+                      <input 
+                        type="number" 
+                        className="w-full p-2 border rounded-md" 
+                        placeholder="Ex: 120"
+                        value={novoExame.ldl || ''}
+                        onChange={(e) => setNovoExame({...novoExame, ldl: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Triglicerídeos (mg/dL)</label>
+                      <input 
+                        type="number" 
+                        className="w-full p-2 border rounded-md" 
+                        placeholder="Ex: 140"
+                        value={novoExame.triglicerideos || ''}
+                        onChange={(e) => setNovoExame({...novoExame, triglicerideos: Number(e.target.value)})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Peso (kg)</label>
+                      <input 
+                        type="number" 
+                        step="0.1" 
+                        className="w-full p-2 border rounded-md" 
+                        placeholder="Ex: 75.5"
+                        value={novoExame.peso || ''}
+                        onChange={(e) => setNovoExame({...novoExame, peso: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Altura (m)</label>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        className="w-full p-2 border rounded-md" 
+                        placeholder="Ex: 1.70"
+                        value={novoExame.altura || ''}
+                        onChange={(e) => setNovoExame({...novoExame, altura: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">IMC (calculado)</label>
+                      <div className="w-full p-2 border rounded-md bg-gray-50 flex items-center">
+                        <Calculator className="h-4 w-4 text-gray-500 mr-2" />
+                        <span className="text-gray-700">
+                          {novoExame.peso && novoExame.altura ? calcularIMC(novoExame.peso, novoExame.altura) : '--'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Observações</label>
+                    <textarea 
+                      className="w-full p-2 border rounded-md" 
+                      rows={2} 
+                      placeholder="Observações sobre o exame..."
+                      value={novoExame.observacoes || ''}
+                      onChange={(e) => setNovoExame({...novoExame, observacoes: e.target.value})}
+                    ></textarea>
+                  </div>
+
+                  <Button onClick={adicionarExame} className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar Exame
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Gráficos de Evolução */}
+              {exames.length > 1 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <LineChart className="h-5 w-5 text-blue-600" />
+                      <span>Evolução dos Exames</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RechartsLineChart data={dadosGrafico}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="data" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="Glicemia (mg/dL)" stroke="#ef4444" strokeWidth={2} />
+                          <Line type="monotone" dataKey="HbA1c (%)" stroke="#f97316" strokeWidth={2} />
+                          <Line type="monotone" dataKey="Peso (kg)" stroke="#22c55e" strokeWidth={2} />
+                          <Line type="monotone" dataKey="IMC" stroke="#8b5cf6" strokeWidth={2} />
+                        </RechartsLineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Lista de Exames com Comparação */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <BarChart3 className="h-5 w-5 text-purple-600" />
+                    <span>Histórico de Exames</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RechartsLineChart data={dadosGrafico}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="data" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="Glicemia (mg/dL)" stroke="#ef4444" strokeWidth={2} />
-                        <Line type="monotone" dataKey="HbA1c (%)" stroke="#f97316" strokeWidth={2} />
-                        <Line type="monotone" dataKey="Peso (kg)" stroke="#22c55e" strokeWidth={2} />
-                        <Line type="monotone" dataKey="IMC" stroke="#8b5cf6" strokeWidth={2} />
-                      </RechartsLineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Lista de Exames com Comparação */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BarChart3 className="h-5 w-5 text-purple-600" />
-                  <span>Histórico de Exames</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {exames.map((exame, index) => {
-                    const examAnterior = index > 0 ? exames[index - 1] : null;
-                    
-                    return (
-                      <Card key={exame.id} className="border-l-4 border-l-blue-500">
-                        <CardContent className="pt-4">
-                          <div className="flex justify-between items-start mb-4">
-                            <div>
-                              <h4 className="font-semibold text-lg">
-                                {new Date(exame.date).toLocaleDateString('pt-BR')}
-                              </h4>
-                              {exame.observacoes && (
-                                <p className="text-sm text-gray-600 mt-1">{exame.observacoes}</p>
-                              )}
-                            </div>
-                            {examAnterior && (
-                              <div className="text-right">
-                                <p className="text-xs text-gray-500">Comparado ao exame anterior</p>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {/* Glicemia */}
-                            <div className="p-3 bg-gray-50 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">Glicemia</span>
-                                {examAnterior && (() => {
-                                  const tendencia = calcularTendencia(exame.glicemiaJejum, examAnterior.glicemiaJejum);
-                                  const IconeTendencia = tendencia.icone;
-                                  return (
-                                    <div className={`flex items-center ${tendencia.cor}`}>
-                                      <IconeTendencia className="h-3 w-3 mr-1" />
-                                      <span className="text-xs">{tendencia.texto}</span>
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                              <p className={`text-lg font-bold ${obterStatusExame(exame.glicemiaJejum, 'glicemiaJejum').cor}`}>
-                                {exame.glicemiaJejum} mg/dL
-                              </p>
-                              <p className="text-xs text-gray-500">Normal: 70-99 mg/dL</p>
-                            </div>
-
-                            {/* HbA1c */}
-                            <div className="p-3 bg-gray-50 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">HbA1c</span>
-                                {examAnterior && (() => {
-                                  const tendencia = calcularTendencia(exame.hba1c, examAnterior.hba1c);
-                                  const IconeTendencia = tendencia.icone;
-                                  return (
-                                    <div className={`flex items-center ${tendencia.cor}`}>
-                                      <IconeTendencia className="h-3 w-3 mr-1" />
-                                      <span className="text-xs">{tendencia.texto}</span>
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                              <p className={`text-lg font-bold ${obterStatusExame(exame.hba1c, 'hba1c').cor}`}>
-                                {exame.hba1c}%
-                              </p>
-                              <p className="text-xs text-gray-500">Normal: &lt; 5,7%</p>
-                            </div>
-
-                            {/* Peso */}
-                            <div className="p-3 bg-gray-50 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">Peso</span>
-                                {examAnterior && (() => {
-                                  const tendencia = calcularTendencia(exame.peso, examAnterior.peso);
-                                  const IconeTendencia = tendencia.icone;
-                                  return (
-                                    <div className={`flex items-center ${tendencia.cor}`}>
-                                      <IconeTendencia className="h-3 w-3 mr-1" />
-                                      <span className="text-xs">{tendencia.texto}</span>
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                              <p className="text-lg font-bold text-blue-600">{exame.peso} kg</p>
-                              <p className="text-xs text-gray-500">IMC: {exame.imc}</p>
-                            </div>
-
-                            {/* Colesterol Total */}
-                            <div className="p-3 bg-gray-50 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">Colesterol</span>
-                                {examAnterior && (() => {
-                                  const tendencia = calcularTendencia(exame.colesterolTotal, examAnterior.colesterolTotal);
-                                  const IconeTendencia = tendencia.icone;
-                                  return (
-                                    <div className={`flex items-center ${tendencia.cor}`}>
-                                      <IconeTendencia className="h-3 w-3 mr-1" />
-                                      <span className="text-xs">{tendencia.texto}</span>
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                              <p className={`text-lg font-bold ${obterStatusExame(exame.colesterolTotal, 'colesterolTotal').cor}`}>
-                                {exame.colesterolTotal} mg/dL
-                              </p>
-                              <p className="text-xs text-gray-500">Ideal: &lt; 200 mg/dL</p>
-                            </div>
-                          </div>
-
-                          {/* Alertas de valores fora da faixa */}
-                          <div className="mt-4 space-y-2">
-                            {exame.glicemiaJejum > 99 && (
-                              <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-2 rounded">
-                                <AlertTriangle className="h-4 w-4" />
-                                <span className="text-sm">Glicemia acima do normal. Consulte seu médico.</span>
-                              </div>
-                            )}
-                            {exame.hba1c >= 6.5 && (
-                              <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-2 rounded">
-                                <AlertTriangle className="h-4 w-4" />
-                                <span className="text-sm">HbA1c indica diabetes. Acompanhamento médico necessário.</span>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Análise Inteligente */}
-            {exames.length > 1 && (
-              <Card className="bg-green-50 border-green-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2 text-green-800">
-                    <Brain className="h-5 w-5" />
-                    <span>Análise Inteligente</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-green-700">
-                  <div className="space-y-2">
-                    {(() => {
-                      const ultimoExame = exames[exames.length - 1];
-                      const primeiroExame = exames[0];
-                      const melhoraHbA1c = ((primeiroExame.hba1c - ultimoExame.hba1c) / primeiroExame.hba1c) * 100;
-                      const perdaPeso = ((primeiroExame.peso - ultimoExame.peso) / primeiroExame.peso) * 100;
+                  <div className="space-y-4">
+                    {exames.map((exame, index) => {
+                      const examAnterior = index > 0 ? exames[index - 1] : null;
                       
                       return (
-                        <>
-                          <p className="text-sm">
-                            <strong>Evolução Geral:</strong> Sua hemoglobina glicada {melhoraHbA1c > 0 ? 'melhorou' : 'piorou'} em {Math.abs(melhoraHbA1c).toFixed(1)}% 
-                            e você {perdaPeso > 0 ? 'perdeu' : 'ganhou'} {Math.abs(perdaPeso).toFixed(1)}% do peso inicial.
-                          </p>
-                          {melhoraHbA1c > 5 && perdaPeso > 3 && (
-                            <p className="text-sm">
-                              <strong>Parabéns!</strong> Sua evolução está excelente. Continue mantendo uma dieta equilibrada, 
-                              boa hidratação e siga as orientações médicas.
-                            </p>
-                          )}
-                          {ultimoExame.hba1c < 7.0 && (
-                            <p className="text-sm">
-                              <strong>Meta Alcançada:</strong> Sua HbA1c está dentro da meta para diabéticos (&lt; 7%). 
-                              Mantenha o bom trabalho!
-                            </p>
-                          )}
-                        </>
+                        <Card key={exame.id} className="border-l-4 border-l-blue-500">
+                          <CardContent className="pt-4">
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h4 className="font-semibold text-lg">
+                                  {new Date(exame.date).toLocaleDateString('pt-BR')}
+                                </h4>
+                                {exame.observacoes && (
+                                  <p className="text-sm text-gray-600 mt-1">{exame.observacoes}</p>
+                                )}
+                              </div>
+                              {examAnterior && (
+                                <div className="text-right">
+                                  <p className="text-xs text-gray-500">Comparado ao exame anterior</p>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              {/* Glicemia */}
+                              <div className="p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">Glicemia</span>
+                                  {examAnterior && (() => {
+                                    const tendencia = calcularTendencia(exame.glicemiaJejum, examAnterior.glicemiaJejum);
+                                    const IconeTendencia = tendencia.icone;
+                                    return (
+                                      <div className={`flex items-center ${tendencia.cor}`}>
+                                        <IconeTendencia className="h-3 w-3 mr-1" />
+                                        <span className="text-xs">{tendencia.texto}</span>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                                <p className={`text-lg font-bold ${obterStatusExame(exame.glicemiaJejum, 'glicemiaJejum').cor}`}>
+                                  {exame.glicemiaJejum} mg/dL
+                                </p>
+                                <p className="text-xs text-gray-500">Normal: 70-99 mg/dL</p>
+                              </div>
+
+                              {/* HbA1c */}
+                              <div className="p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">HbA1c</span>
+                                  {examAnterior && (() => {
+                                    const tendencia = calcularTendencia(exame.hba1c, examAnterior.hba1c);
+                                    const IconeTendencia = tendencia.icone;
+                                    return (
+                                      <div className={`flex items-center ${tendencia.cor}`}>
+                                        <IconeTendencia className="h-3 w-3 mr-1" />
+                                        <span className="text-xs">{tendencia.texto}</span>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                                <p className={`text-lg font-bold ${obterStatusExame(exame.hba1c, 'hba1c').cor}`}>
+                                  {exame.hba1c}%
+                                </p>
+                                <p className="text-xs text-gray-500">Normal: &lt; 5,7%</p>
+                              </div>
+
+                              {/* Peso */}
+                              <div className="p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">Peso</span>
+                                  {examAnterior && (() => {
+                                    const tendencia = calcularTendencia(exame.peso, examAnterior.peso);
+                                    const IconeTendencia = tendencia.icone;
+                                    return (
+                                      <div className={`flex items-center ${tendencia.cor}`}>
+                                        <IconeTendencia className="h-3 w-3 mr-1" />
+                                        <span className="text-xs">{tendencia.texto}</span>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                                <p className="text-lg font-bold text-blue-600">{exame.peso} kg</p>
+                                <p className="text-xs text-gray-500">IMC: {exame.imc}</p>
+                              </div>
+
+                              {/* Colesterol Total */}
+                              <div className="p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">Colesterol</span>
+                                  {examAnterior && (() => {
+                                    const tendencia = calcularTendencia(exame.colesterolTotal, examAnterior.colesterolTotal);
+                                    const IconeTendencia = tendencia.icone;
+                                    return (
+                                      <div className={`flex items-center ${tendencia.cor}`}>
+                                        <IconeTendencia className="h-3 w-3 mr-1" />
+                                        <span className="text-xs">{tendencia.texto}</span>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                                <p className={`text-lg font-bold ${obterStatusExame(exame.colesterolTotal, 'colesterolTotal').cor}`}>
+                                  {exame.colesterolTotal} mg/dL
+                                </p>
+                                <p className="text-xs text-gray-500">Ideal: &lt; 200 mg/dL</p>
+                              </div>
+                            </div>
+
+                            {/* Alertas de valores fora da faixa */}
+                            <div className="mt-4 space-y-2">
+                              {exame.glicemiaJejum > 99 && (
+                                <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-2 rounded">
+                                  <AlertTriangle className="h-4 w-4" />
+                                  <span className="text-sm">Glicemia acima do normal. Consulte seu médico.</span>
+                                </div>
+                              )}
+                              {exame.hba1c >= 6.5 && (
+                                <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-2 rounded">
+                                  <AlertTriangle className="h-4 w-4" />
+                                  <span className="text-sm">HbA1c indica diabetes. Acompanhamento médico necessário.</span>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
                       );
-                    })()}
+                    })}
                   </div>
                 </CardContent>
               </Card>
-            )}
 
-            {/* Exportar Relatório de Exames */}
-            <Card className="bg-blue-50 border-blue-200">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-blue-800">
-                  <FileText className="h-5 w-5" />
-                  <span>Relatório de Exames</span>
-                </CardTitle>
-                <CardDescription className="text-blue-700">
-                  Exporte um relatório completo com todos os seus exames laboratoriais
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="bg-blue-600 hover:bg-blue-700">
-                  <Download className="h-4 w-4 mr-2" />
-                  Exportar Relatório de Exames (PDF)
-                </Button>
-                <p className="text-xs text-blue-600 mt-2">
-                  Inclui gráficos, evolução temporal e análise comparativa
-                </p>
-              </CardContent>
-            </Card>
+              {/* Análise Inteligente */}
+              {exames.length > 1 && (
+                <Card className="bg-green-50 border-green-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2 text-green-800">
+                      <Brain className="h-5 w-5" />
+                      <span>Análise Inteligente</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-green-700">
+                    <div className="space-y-2">
+                      {(() => {
+                        const ultimoExame = exames[exames.length - 1];
+                        const primeiroExame = exames[0];
+                        const melhoraHbA1c = ((primeiroExame.hba1c - ultimoExame.hba1c) / primeiroExame.hba1c) * 100;
+                        const perdaPeso = ((primeiroExame.peso - ultimoExame.peso) / primeiroExame.peso) * 100;
+                        
+                        return (
+                          <>
+                            <p className="text-sm">
+                              <strong>Evolução Geral:</strong> Sua hemoglobina glicada {melhoraHbA1c > 0 ? 'melhorou' : 'piorou'} em {Math.abs(melhoraHbA1c).toFixed(1)}% 
+                              e você {perdaPeso > 0 ? 'perdeu' : 'ganhou'} {Math.abs(perdaPeso).toFixed(1)}% do peso inicial.
+                            </p>
+                            {melhoraHbA1c > 5 && perdaPeso > 3 && (
+                              <p className="text-sm">
+                                <strong>Parabéns!</strong> Sua evolução está excelente. Continue mantendo uma dieta equilibrada, 
+                                boa hidratação e siga as orientações médicas.
+                              </p>
+                            )}
+                            {ultimoExame.hba1c < 7.0 && (
+                              <p className="text-sm">
+                                <strong>Meta Alcançada:</strong> Sua HbA1c está dentro da meta para diabéticos (&lt; 7%). 
+                                Mantenha o bom trabalho!
+                              </p>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Exportar Relatório de Exames */}
+              <Card className="bg-blue-50 border-blue-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-blue-800">
+                    <FileText className="h-5 w-5" />
+                    <span>Relatório de Exames</span>
+                  </CardTitle>
+                  <CardDescription className="text-blue-700">
+                    Exporte um relatório completo com todos os seus exames laboratoriais
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar Relatório de Exames (PDF)
+                  </Button>
+                  <p className="text-xs text-blue-600 mt-2">
+                    Inclui gráficos, evolução temporal e análise comparativa
+                  </p>
+                </CardContent>
+              </Card>
+            </SubscriptionGate>
           </TabsContent>
 
-          {/* Notícias e Alertas */}
+          {/* Notícias e Alertas - PREMIUM */}
           <TabsContent value="news" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Bell className="h-6 w-6 text-orange-600" />
-                  <span>Notícias e Alertas</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <Card className="bg-yellow-50 border-yellow-200">
-                    <CardContent className="pt-4">
-                      <div className="flex items-start space-x-3">
-                        <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                        <div>
-                          <h4 className="font-medium text-yellow-800">Alerta ANVISA</h4>
-                          <p className="text-sm text-yellow-700">
-                            Cuidado com produtos não registrados. Sempre verifique a procedência.
-                          </p>
-                          <p className="text-xs text-yellow-600 mt-1">Há 2 dias</p>
+            <SubscriptionGate 
+              feature="news" 
+              title="Notícias e Alertas"
+              description="Mantenha-se atualizado com as últimas informações sobre tirzepatida."
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Bell className="h-6 w-6 text-orange-600" />
+                    <span>Notícias e Alertas</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-4">
+                    <Card className="bg-yellow-50 border-yellow-200">
+                      <CardContent className="pt-4">
+                        <div className="flex items-start space-x-3">
+                          <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                          <div>
+                            <h4 className="font-medium text-yellow-800">Alerta ANVISA</h4>
+                            <p className="text-sm text-yellow-700">
+                              Cuidado com produtos não registrados. Sempre verifique a procedência.
+                            </p>
+                            <p className="text-xs text-yellow-600 mt-1">Há 2 dias</p>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
 
-                  <Card>
-                    <CardContent className="pt-4">
-                      <div className="flex items-start space-x-3">
-                        <BookOpen className="h-5 w-5 text-blue-600 mt-0.5" />
-                        <div>
-                          <h4 className="font-medium">Novo Estudo Clínico</h4>
-                          <p className="text-sm text-gray-600">
-                            Pesquisa confirma eficácia da tirzepatida em pacientes com diabetes tipo 2.
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">Há 1 semana</p>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-start space-x-3">
+                          <BookOpen className="h-5 w-5 text-blue-600 mt-0.5" />
+                          <div>
+                            <h4 className="font-medium">Novo Estudo Clínico</h4>
+                            <p className="text-sm text-gray-600">
+                              Pesquisa confirma eficácia da tirzepatida em pacientes com diabetes tipo 2.
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">Há 1 semana</p>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
 
-                  <Card>
-                    <CardContent className="pt-4">
-                      <div className="flex items-start space-x-3">
-                        <Globe className="h-5 w-5 text-green-600 mt-0.5" />
-                        <div>
-                          <h4 className="font-medium">Situação Regulatória</h4>
-                          <p className="text-sm text-gray-600">
-                            Aprovada pela FDA, EMA e ANVISA. Disponível sob diferentes marcas.
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">Há 2 semanas</p>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-start space-x-3">
+                          <Globe className="h-5 w-5 text-green-600 mt-0.5" />
+                          <div>
+                            <h4 className="font-medium">Situação Regulatória</h4>
+                            <p className="text-sm text-gray-600">
+                              Aprovada pela FDA, EMA e ANVISA. Disponível sob diferentes marcas.
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">Há 2 semanas</p>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Fontes e Referências */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BookOpen className="h-5 w-5 text-gray-600" />
-                  <span>Fontes e Referências</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li>• FDA (Food and Drug Administration)</li>
-                  <li>• ANVISA (Agência Nacional de Vigilância Sanitária)</li>
-                  <li>• New England Journal of Medicine (Estudos SURPASS/SURMOUNT)</li>
-                  <li>• Eli Lilly and Company</li>
-                  <li>• EMA (European Medicines Agency)</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Sobre Ronaldo da Tirzepatida - Seção Destacada */}
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-blue-800">
-                  <Award className="h-6 w-6" />
-                  <span>Sobre Ronaldo da Tirzepatida</span>
-                </CardTitle>
-                <CardDescription className="text-blue-700">
-                  Conheça o criador do TirzeTrack e sua missão de promover informação científica e bem-estar
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="bg-white p-6 rounded-lg border border-blue-100">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Biográfico</h3>
-                    <h4 className="text-lg font-semibold text-blue-800 mb-4">Ronaldo Caitano Pires Bispo</h4>
-                    
-                    <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-                      Presidente da CNRCEUS, Pastor, Filósofo, Psicanalista, Aspirante em Psicologia 5° período, 
-                      Capelão Militar e Hospitalar, e Juiz de Paz, com ampla atuação nas áreas espiritual, 
-                      educacional e humanística.
-                    </p>
+                      </CardContent>
+                    </Card>
                   </div>
+                </CardContent>
+              </Card>
 
-                  <div className="bg-white p-6 rounded-lg border border-blue-100">
-                    <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
-                      <Heart className="h-4 w-4 text-red-500 mr-2" />
-                      Trajetória e Missão
-                    </h5>
-                    <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-                      Com uma trajetória marcada pela integração entre fé, ciência e serviço social, o Bispo Ronaldo 
-                      dedica-se à formação de líderes, à restauração de famílias, ao aconselhamento psicológico e à 
-                      promoção do bem-estar espiritual e emocional.
-                    </p>
-                  </div>
+              {/* Fontes e Referências */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <BookOpen className="h-5 w-5 text-gray-600" />
+                    <span>Fontes e Referências</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li>• FDA (Food and Drug Administration)</li>
+                    <li>• ANVISA (Agência Nacional de Vigilância Sanitária)</li>
+                    <li>• New England Journal of Medicine (Estudos SURPASS/SURMOUNT)</li>
+                    <li>• Eli Lilly and Company</li>
+                    <li>• EMA (European Medicines Agency)</li>
+                  </ul>
+                </CardContent>
+              </Card>
 
-                  <div className="bg-white p-6 rounded-lg border border-blue-100">
-                    <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
-                      <BookOpen className="h-4 w-4 text-green-500 mr-2" />
-                      Formação Acadêmica
-                    </h5>
-                    <p className="text-sm text-gray-700 mb-3">
-                      Sua formação acadêmica inclui estudos em renomadas instituições brasileiras:
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <ul className="text-sm text-gray-700 space-y-1">
-                        <li className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                          Faculdades Unilasalle – Niterói (RJ)
-                        </li>
-                        <li className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                          FACES – Itaboraí (RJ)
-                        </li>
-                        <li className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                          UNIFATEC – Santa Catarina
-                        </li>
-                      </ul>
-                      <ul className="text-sm text-gray-700 space-y-1">
-                        <li className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                          UNICAJE – São Luís (MA)
-                        </li>
-                        <li className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                          FACEO – São Paulo (SP)
-                        </li>
-                      </ul>
+              {/* Sobre Ronaldo da Tirzepatida - Seção Destacada */}
+              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-blue-800">
+                    <Award className="h-6 w-6" />
+                    <span>Sobre Ronaldo da Tirzepatida</span>
+                  </CardTitle>
+                  <CardDescription className="text-blue-700">
+                    Conheça o criador do TirzeTrack e sua missão de promover informação científica e bem-estar
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-lg border border-blue-100">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">Biográfico</h3>
+                      <h4 className="text-lg font-semibold text-blue-800 mb-4">Ronaldo Caitano Pires Bispo</h4>
+                      
+                      <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+                        Presidente da CNRCEUS, Pastor, Filósofo, Psicanalista, Aspirante em Psicologia 5° período, 
+                        Capelão Militar e Hospitalar, e Juiz de Paz, com ampla atuação nas áreas espiritual, 
+                        educacional e humanística.
+                      </p>
                     </div>
-                  </div>
 
-                  <div className="bg-white p-6 rounded-lg border border-blue-100">
-                    <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
-                      <Brain className="h-4 w-4 text-purple-500 mr-2" />
-                      Filosofia e Abordagem
-                    </h5>
-                    <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-                      Ao longo de sua carreira, tem se destacado pela capacidade de unir sabedoria teológica, 
-                      conhecimento psicológico e visão filosófica em sua prática pastoral e educacional. Seu trabalho 
-                      reflete uma abordagem integral do ser humano — corpo, mente e espírito — voltada para a 
-                      transformação pessoal e social através do amor, da fé e do conhecimento.
-                    </p>
-                  </div>
+                    <div className="bg-white p-6 rounded-lg border border-blue-100">
+                      <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
+                        <Heart className="h-4 w-4 text-red-500 mr-2" />
+                        Trajetória e Missão
+                      </h5>
+                      <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+                        Com uma trajetória marcada pela integração entre fé, ciência e serviço social, o Bispo Ronaldo 
+                        dedica-se à formação de líderes, à restauração de famílias, ao aconselhamento psicológico e à 
+                        promoção do bem-estar espiritual e emocional.
+                      </p>
+                    </div>
 
-                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                    <div className="flex items-start space-x-2">
-                      <Info className="h-4 w-4 text-yellow-600 mt-0.5" />
-                      <div>
-                        <p className="text-xs text-yellow-800 font-medium mb-1">Declaração de Independência</p>
-                        <p className="text-xs text-yellow-700 leading-relaxed">
-                          Este aplicativo tem fins educativos e não possui vínculo comercial com fabricantes de medicamentos. 
-                          As informações não substituem orientação médica profissional. O TirzeTrack foi desenvolvido com o 
-                          objetivo de promover educação em saúde e bem-estar.
-                        </p>
+                    <div className="bg-white p-6 rounded-lg border border-blue-100">
+                      <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
+                        <BookOpen className="h-4 w-4 text-green-500 mr-2" />
+                        Formação Acadêmica
+                      </h5>
+                      <p className="text-sm text-gray-700 mb-3">
+                        Sua formação acadêmica inclui estudos em renomadas instituições brasileiras:
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <ul className="text-sm text-gray-700 space-y-1">
+                          <li className="flex items-center">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                            Faculdades Unilasalle – Niterói (RJ)
+                          </li>
+                          <li className="flex items-center">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                            FACES – Itaboraí (RJ)
+                          </li>
+                          <li className="flex items-center">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                            UNIFATEC – Santa Catarina
+                          </li>
+                        </ul>
+                        <ul className="text-sm text-gray-700 space-y-1">
+                          <li className="flex items-center">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                            UNICAJE – São Luís (MA)
+                          </li>
+                          <li className="flex items-center">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                            FACEO – São Paulo (SP)
+                          </li>
+                        </ul>
                       </div>
                     </div>
+
+                    <div className="bg-white p-6 rounded-lg border border-blue-100">
+                      <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
+                        <Brain className="h-4 w-4 text-purple-500 mr-2" />
+                        Filosofia e Abordagem
+                      </h5>
+                      <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+                        Ao longo de sua carreira, tem se destacado pela capacidade de unir sabedoria teológica, 
+                        conhecimento psicológico e visão filosófica em sua prática pastoral e educacional. Seu trabalho 
+                        reflete uma abordagem integral do ser humano — corpo, mente e espírito — voltada para a 
+                        transformação pessoal e social através do amor, da fé e do conhecimento.
+                      </p>
+                    </div>
+
+                    <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                      <div className="flex items-start space-x-2">
+                        <Info className="h-4 w-4 text-yellow-600 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-yellow-800 font-medium mb-1">Declaração de Independência</p>
+                          <p className="text-xs text-yellow-700 leading-relaxed">
+                            Este aplicativo tem fins educativos e não possui vínculo comercial com fabricantes de medicamentos. 
+                            As informações não substituem orientação médica profissional. O TirzeTrack foi desenvolvido com o 
+                            objetivo de promover educação em saúde e bem-estar.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </SubscriptionGate>
           </TabsContent>
         </Tabs>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <SubscriptionProvider>
+      <TirzeTrackApp />
+    </SubscriptionProvider>
   );
 }
