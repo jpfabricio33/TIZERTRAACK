@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Configurações do Mercado Pago (estas devem vir de variáveis de ambiente)
-const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
-const MP_PUBLIC_KEY = process.env.MP_PUBLIC_KEY;
+import { mercadoPagoConfig, validateEnv } from '@/lib/env';
 
 export async function POST(request: NextRequest) {
   try {
+    // Validar variáveis de ambiente
+    validateEnv();
+
     const { plan, amount, frequency } = await request.json();
 
     // Criar preferência de pagamento no Mercado Pago
@@ -24,32 +24,42 @@ export async function POST(request: NextRequest) {
         installments: 1
       },
       back_urls: {
-        success: `${process.env.NEXT_PUBLIC_BASE_URL}/subscription/success`,
-        failure: `${process.env.NEXT_PUBLIC_BASE_URL}/subscription/failure`,
-        pending: `${process.env.NEXT_PUBLIC_BASE_URL}/subscription/pending`
+        success: mercadoPagoConfig.successUrl,
+        failure: mercadoPagoConfig.failureUrl,
+        pending: mercadoPagoConfig.pendingUrl
       },
       auto_return: 'approved',
-      notification_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/mercadopago/webhook`,
+      notification_url: mercadoPagoConfig.webhookUrl,
       metadata: {
         plan_type: plan,
         frequency: frequency
       }
     };
 
+    console.log('🔧 Configuração do Mercado Pago:', {
+      accessToken: mercadoPagoConfig.accessToken ? '✅ Configurado' : '❌ Não encontrado',
+      webhookUrl: mercadoPagoConfig.webhookUrl,
+      successUrl: mercadoPagoConfig.successUrl
+    });
+
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+        'Authorization': `Bearer ${mercadoPagoConfig.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(preference),
     });
 
     if (!response.ok) {
-      throw new Error('Erro ao criar preferência no Mercado Pago');
+      const errorData = await response.text();
+      console.error('❌ Erro do Mercado Pago:', errorData);
+      throw new Error(`Erro ao criar preferência no Mercado Pago: ${response.status}`);
     }
 
     const data = await response.json();
+
+    console.log('✅ Preferência criada com sucesso:', data.id);
 
     return NextResponse.json({
       id: data.id,
@@ -58,9 +68,12 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Erro ao criar assinatura:', error);
+    console.error('❌ Erro ao criar assinatura:', error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { 
+        error: 'Erro interno do servidor',
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
+      },
       { status: 500 }
     );
   }
