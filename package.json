@@ -9,8 +9,9 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "vercel-build": "next build",
-    "postbuild": "next-sitemap"
+    "check-vercel": "node check-vercel-connection.js",
+    "deploy": "vercel --prod",
+    "deploy-preview": "vercel"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
