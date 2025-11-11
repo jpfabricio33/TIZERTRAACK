@@ -8,15 +8,15 @@ export async function POST(request: NextRequest) {
 
     const { plan, amount, frequency } = await request.json();
 
-    // Criar preferência de pagamento no Mercado Pago
+    // Criar preferência de pagamento no Mercado Pago (TESTE)
     const preference = {
       items: [
         {
-          title: 'TirzeTrack Premium - Assinatura Mensal',
-          description: 'Acesso completo ao TirzeTrack com todas as funcionalidades premium',
+          title: 'TirzeTrack Premium - Assinatura Mensal (TESTE)',
+          description: 'Acesso completo ao TirzeTrack com todas as funcionalidades premium - Modo Teste',
           quantity: 1,
           currency_id: 'BRL',
-          unit_price: amount
+          unit_price: parseFloat(amount) || 19.90
         }
       ],
       payment_methods: {
@@ -31,15 +31,17 @@ export async function POST(request: NextRequest) {
       auto_return: 'approved',
       notification_url: mercadoPagoConfig.webhookUrl,
       metadata: {
-        plan_type: plan,
-        frequency: frequency
+        plan_type: plan || 'premium',
+        frequency: frequency || 'monthly',
+        test_mode: 'true'
       }
     };
 
-    console.log('🔧 Configuração do Mercado Pago:', {
-      accessToken: mercadoPagoConfig.accessToken ? '✅ Configurado' : '❌ Não encontrado',
+    console.log('🔧 Configuração do Mercado Pago (TESTE):', {
+      accessToken: mercadoPagoConfig.accessToken ? '✅ TEST Token Configurado' : '❌ Não encontrado',
       webhookUrl: mercadoPagoConfig.webhookUrl,
-      successUrl: mercadoPagoConfig.successUrl
+      successUrl: mercadoPagoConfig.successUrl,
+      amount: parseFloat(amount) || 19.90
     });
 
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
@@ -59,12 +61,13 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
 
-    console.log('✅ Preferência criada com sucesso:', data.id);
+    console.log('✅ Preferência criada com sucesso (TESTE):', data.id);
 
     return NextResponse.json({
       id: data.id,
       init_point: data.init_point,
-      sandbox_init_point: data.sandbox_init_point
+      sandbox_init_point: data.sandbox_init_point,
+      test_mode: true
     });
 
   } catch (error) {
@@ -72,7 +75,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Erro interno do servidor',
-        details: error instanceof Error ? error.message : 'Erro desconhecido'
+        details: error instanceof Error ? error.message : 'Erro desconhecido',
+        test_mode: true
       },
       { status: 500 }
     );
