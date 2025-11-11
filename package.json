@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint --fix",
+    "clean": "rm -rf .next out node_modules/.cache",
+    "postinstall": "npm run lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -74,6 +76,7 @@
     "typescript": "^5.7.2"
   },
   "engines": {
-    "node": ">=18.17.0"
+    "node": ">=18.17.0",
+    "npm": ">=9.0.0"
   }
 }
